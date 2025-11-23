@@ -11,24 +11,31 @@ class TurnoView(tk.Frame):
         self.controller = TurnoController()
         self.turnos_cache = {}
         self.estado_por_nombre = {}
+        self.pacientes_display_to_id = {}
+        self.pacientes_id_to_display = {}
+        self.medicos_display_to_id = {}
+        self.medicos_id_to_display = {}
         self.selected_id = None
         self.pack(fill="both", expand=True)
 
         self._crear_widgets()
+        self._cargar_pacientes()
+        self._cargar_medicos()
         self._cargar_estados()
         self._cargar_turnos()
+        self._limpiar_formulario()
 
     def _crear_widgets(self):
         form_frame = tk.LabelFrame(self, text="Datos del turno")
         form_frame.pack(fill="x", padx=10, pady=10)
 
-        tk.Label(form_frame, text="ID Paciente:").grid(row=0, column=0, sticky="e", padx=5, pady=5)
-        self.entry_id_paciente = tk.Entry(form_frame)
-        self.entry_id_paciente.grid(row=0, column=1, padx=5, pady=5)
+        tk.Label(form_frame, text="Paciente:").grid(row=0, column=0, sticky="e", padx=5, pady=5)
+        self.combo_paciente = ttk.Combobox(form_frame, state="readonly", width=40)
+        self.combo_paciente.grid(row=0, column=1, padx=5, pady=5)
 
-        tk.Label(form_frame, text="ID Medico:").grid(row=0, column=2, sticky="e", padx=5, pady=5)
-        self.entry_id_medico = tk.Entry(form_frame)
-        self.entry_id_medico.grid(row=0, column=3, padx=5, pady=5)
+        tk.Label(form_frame, text="Medico:").grid(row=0, column=2, sticky="e", padx=5, pady=5)
+        self.combo_medico = ttk.Combobox(form_frame, state="readonly", width=40)
+        self.combo_medico.grid(row=0, column=3, padx=5, pady=5)
 
         tk.Label(form_frame, text="Fecha (YYYY-MM-DD):").grid(row=1, column=0, sticky="e", padx=5, pady=5)
         self.entry_fecha = tk.Entry(form_frame)
@@ -75,6 +82,54 @@ class TurnoView(tk.Frame):
         self.tabla.pack(fill="both", expand=True)
         self.tabla.bind("<<TreeviewSelect>>", self._seleccionar_turno)
 
+    def _cargar_pacientes(self):
+        try:
+            pacientes = self.controller.listar_pacientes()
+        except Exception as exc:
+            messagebox.showerror("Error", str(exc))
+            pacientes = []
+
+        self.pacientes_display_to_id = {}
+        self.pacientes_id_to_display = {}
+        valores = []
+        for paciente in pacientes:
+            dni = paciente.dni or "-"
+            display = (
+                f"{paciente.apellido}, {paciente.nombre} - DNI {dni} "
+                f"(ID {paciente.id_paciente})"
+            )
+            self.pacientes_display_to_id[display] = paciente.id_paciente
+            self.pacientes_id_to_display[paciente.id_paciente] = display
+            valores.append(display)
+
+        self.combo_paciente["values"] = valores
+        if not valores:
+            self.combo_paciente.set("")
+
+    def _cargar_medicos(self):
+        try:
+            medicos = self.controller.listar_medicos()
+        except Exception as exc:
+            messagebox.showerror("Error", str(exc))
+            medicos = []
+
+        self.medicos_display_to_id = {}
+        self.medicos_id_to_display = {}
+        valores = []
+        for medico in medicos:
+            matricula = medico.matricula or "Sin matricula"
+            display = (
+                f"{medico.apellido}, {medico.nombre} - Mat {matricula} "
+                f"(ID {medico.id_medico})"
+            )
+            self.medicos_display_to_id[display] = medico.id_medico
+            self.medicos_id_to_display[medico.id_medico] = display
+            valores.append(display)
+
+        self.combo_medico["values"] = valores
+        if not valores:
+            self.combo_medico.set("")
+
     def _cargar_estados(self):
         estados = self.controller.listar_estados()
         self.estado_por_nombre = {estado.nombre: estado.id_estado for estado in estados}
@@ -119,11 +174,23 @@ class TurnoView(tk.Frame):
         if not turno:
             return
 
-        self.entry_id_paciente.delete(0, tk.END)
-        self.entry_id_paciente.insert(0, turno.id_paciente)
+        display_paciente = self.pacientes_id_to_display.get(turno.id_paciente)
+        if display_paciente is None:
+            self._cargar_pacientes()
+            display_paciente = self.pacientes_id_to_display.get(turno.id_paciente)
+        if display_paciente:
+            self.combo_paciente.set(display_paciente)
+        else:
+            self.combo_paciente.set("")
 
-        self.entry_id_medico.delete(0, tk.END)
-        self.entry_id_medico.insert(0, turno.id_medico)
+        display_medico = self.medicos_id_to_display.get(turno.id_medico)
+        if display_medico is None:
+            self._cargar_medicos()
+            display_medico = self.medicos_id_to_display.get(turno.id_medico)
+        if display_medico:
+            self.combo_medico.set(display_medico)
+        else:
+            self.combo_medico.set("")
 
         self.entry_fecha.delete(0, tk.END)
         self.entry_fecha.insert(0, turno.fecha)
@@ -174,8 +241,8 @@ class TurnoView(tk.Frame):
             messagebox.showerror("Error", str(exc))
 
     def _limpiar_formulario(self):
-        self.entry_id_paciente.delete(0, tk.END)
-        self.entry_id_medico.delete(0, tk.END)
+        self.combo_paciente.set("")
+        self.combo_medico.set("")
         self.entry_fecha.delete(0, tk.END)
         self.entry_hora.delete(0, tk.END)
         self.entry_motivo.delete(0, tk.END)
@@ -184,6 +251,22 @@ class TurnoView(tk.Frame):
         self.selected_id = None
 
     def _obtener_datos_formulario(self):
+        paciente_display = self.combo_paciente.get()
+        if not paciente_display:
+            raise ValueError("Seleccione un paciente.")
+
+        id_paciente = self.pacientes_display_to_id.get(paciente_display)
+        if id_paciente is None:
+            raise ValueError("Paciente seleccionado invalido.")
+
+        medico_display = self.combo_medico.get()
+        if not medico_display:
+            raise ValueError("Seleccione un medico.")
+
+        id_medico = self.medicos_display_to_id.get(medico_display)
+        if id_medico is None:
+            raise ValueError("Medico seleccionado invalido.")
+
         estado_nombre = self.combo_estado.get()
         if not estado_nombre:
             raise ValueError("Seleccione un estado.")
@@ -193,8 +276,8 @@ class TurnoView(tk.Frame):
             raise ValueError("Estado invalido.")
 
         return {
-            "id_paciente": self.entry_id_paciente.get(),
-            "id_medico": self.entry_id_medico.get(),
+            "id_paciente": str(id_paciente),
+            "id_medico": str(id_medico),
             "fecha": self.entry_fecha.get(),
             "hora": self.entry_hora.get(),
             "motivo": self.entry_motivo.get(),

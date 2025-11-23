@@ -10,6 +10,7 @@ from view.medico_view import MedicoView
 from view.especialidad_view import EspecialidadView
 from view.agenda_view import AgendaView
 from view.turno_view import TurnoView
+from view.historia_clinica_view import HistoriaClinicaView
 
 
 class MenuPrincipal(tk.Frame):
@@ -35,6 +36,9 @@ class MenuPrincipal(tk.Frame):
 
         tk.Button(self, text="Registro de Turnos",
               command=self.abrir_turnos, width=25).pack(pady=10)
+
+        tk.Button(self, text="Historia Clinica",
+                command=self.abrir_historia, width=25).pack(pady=10)
 
     # -----------------------------------------
     # Abrir ventanas
@@ -70,10 +74,17 @@ class MenuPrincipal(tk.Frame):
         ventana.geometry("900x600")
         TurnoView(ventana)
 
+    def abrir_historia(self):
+        ventana = tk.Toplevel(self)
+        ventana.title("Historia Clinica")
+        ventana.geometry("1000x700")
+        HistoriaClinicaView(ventana)
+
 
 # -----------------------------------------
 # PROGRAMA PRINCIPAL
 # -----------------------------------------
+
 if __name__ == "__main__":
     # Crear DB si no existe
     db = DatabaseConnection()
@@ -85,7 +96,7 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.title("Sistema de Turnos Médicos")
     # Ajusté la altura a 500 para que quepa el nuevo botón
-    root.geometry("400x550") 
+    root.geometry("400x640") 
 
     MenuPrincipal(root)
 

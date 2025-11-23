@@ -36,6 +36,12 @@ class TurnoController:
     def listar_estados(self):
         return self.turno_service.obtener_estados()
 
+    def listar_pacientes(self):
+        return self.paciente_service.obtener_todos()
+
+    def listar_medicos(self):
+        return self.medico_service.obtener_todos()
+
     def _construir_turno(self, id_turno, datos: dict):
         id_paciente = self._parsear_id(datos.get("id_paciente"), "paciente")
         id_medico = self._parsear_id(datos.get("id_medico"), "medico")
