@@ -1,11 +1,13 @@
 
 from services.medico_service import MedicoService
+from services.medico_especialidad_service import MedicoEspecialidadService
 from model.medico import Medico
 
 class MedicoController:
 
     def __init__(self):
         self.service = MedicoService()
+        self.medico_especialidad_service = MedicoEspecialidadService()
 
     # Crear
     def crear_medico(self, datos: dict):
@@ -34,16 +36,24 @@ class MedicoController:
         # Validar matrícula única
         if self.service.obtener_por_matricula(datos["matricula"]):
             raise ValueError("Ya existe un médico con esa matrícula.")
+        
+        if not datos.get("id_especialidad"):
+            raise ValueError("Debe seleccionarse una especialidad para el médico.")
 
         medico = Medico(
             dni=datos["dni"],
             nombre=datos["nombre"],
             apellido=datos["apellido"],
             matricula=datos["matricula"],
-            telefono=datos.get("telefono")
+            telefono=datos.get("telefono"),
         )
 
-        return self.service.crear(medico)
+        self.service.crear(medico)
+
+        for esp_id in datos["especialidades"]:
+            self.medico_especialidad_service.asignar(medico.id_medico, esp_id)
+
+        return medico   
 
     # Actualizar
     def actualizar_medico(self, id_medico, datos: dict):

@@ -35,6 +35,7 @@ class MenuPrincipal(tk.Frame):
     # -----------------------------------------
     # Abrir ventanas
     # -----------------------------------------
+
     def abrir_pacientes(self):
         ventana = tk.Toplevel(self)
         ventana.title("ABM Pacientes")

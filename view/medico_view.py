@@ -2,6 +2,8 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from controller.medico_controller import MedicoController
+from services.especialidad_service import EspecialidadService
+from services.medico_especialidad_service import MedicoEspecialidadService
 
 class MedicoView(tk.Frame):
 
@@ -9,9 +11,11 @@ class MedicoView(tk.Frame):
         super().__init__(master)
         self.controller = MedicoController()
         self.pack(fill="both", expand=True)
-
+        self.especialidad_service = EspecialidadService()
+        self.medico_esp_service = MedicoEspecialidadService()
         self.create_widgets()
         self.cargar_medicos()
+        self.cargar_especialidades()
 
     # ------------------------------
     # UI
@@ -45,6 +49,11 @@ class MedicoView(tk.Frame):
         self.telefono = tk.Entry(form)
         self.telefono.grid(row=4, column=1)
 
+        # Especialidad
+        tk.Label(form, text="Especialidad:").grid(row=5, column=0, sticky="w")
+        self.cb_especialidad = ttk.Combobox(form, state="readonly")
+        self.cb_especialidad.grid(row=5, column=1, padx=5, pady=5)
+
         # BOTONES
         btns = tk.Frame(self)
         btns.pack(fill="x", padx=10, pady=10)
@@ -58,7 +67,7 @@ class MedicoView(tk.Frame):
         table_frame = tk.Frame(self)
         table_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-        cols = ("id", "dni", "nombre", "apellido", "matricula", "telefono")
+        cols = ("id", "dni", "nombre", "apellido", "matricula", "telefono", "especialidades")
         self.tabla = ttk.Treeview(table_frame, columns=cols, show="headings")
 
         for c in cols:
@@ -76,10 +85,28 @@ class MedicoView(tk.Frame):
             self.tabla.delete(row)
 
         medicos = self.controller.listar_medicos()
+
         for m in medicos:
+            especialidades = self.medico_esp_service.obtener_especialidades_de_medico(m.id_medico)
+            esp_str = ", ".join(especialidades) if especialidades else "—"
+
             self.tabla.insert("", "end", values=(
-                m.id_medico, m.dni, m.nombre, m.apellido, m.matricula, m.telefono
+                m.id_medico,
+                m.dni,
+                m.nombre,
+                m.apellido,
+                m.matricula,
+                m.telefono,
+                esp_str
             ))
+
+    def cargar_especialidades(self):
+        especialidades = self.especialidad_service.obtener_todas()
+        print("DEBUG:", especialidades)
+
+        self.cb_especialidad["values"] = [
+            f"{e.id_especialidad} - {e.nombre}" for e in especialidades
+        ]
 
     def guardar(self):
         try:
@@ -88,7 +115,8 @@ class MedicoView(tk.Frame):
                 "nombre": self.nombre.get(),
                 "apellido": self.apellido.get(),
                 "matricula": self.matricula.get(),
-                "telefono": self.telefono.get()
+                "telefono": self.telefono.get(),
+                "id_especialidad": int(self.cb_especialidad.get().split(" - ")[0])
             }
             self.controller.crear_medico(datos)
             messagebox.showinfo("Éxito", "Médico agregado.")
