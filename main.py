@@ -3,7 +3,7 @@ from tkinter import ttk
 
 # Inicialización de Base de Datos
 from services.database import DatabaseConnection
-
+from services.data_seeder import DataSeeder
 # Vistas
 from view.paciente_view import PacienteView
 from view.medico_view import MedicoView
@@ -78,6 +78,9 @@ if __name__ == "__main__":
     # Crear DB si no existe
     db = DatabaseConnection()
     db.initialize_database()
+
+    seeder = DataSeeder()
+    seeder.run()
 
     root = tk.Tk()
     root.title("Sistema de Turnos Médicos")
