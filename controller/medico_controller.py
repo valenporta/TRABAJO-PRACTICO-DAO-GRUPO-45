@@ -9,14 +9,20 @@ class MedicoController:
 
     # Crear
     def crear_medico(self, datos: dict):
-        if not datos.get("dni") or len(datos["dni"]) < 7:
-            raise ValueError("El DNI es inválido.")
+        if not datos.get("dni") or not datos["dni"].isdigit() or int(datos["dni"]) <= 0 or len(datos["dni"]) < 7:
+            raise ValueError("El DNI es inválido. Debe ser un número positivo de al menos 7 dígitos.")
 
         if not datos.get("nombre"):
             raise ValueError("El nombre no puede estar vacío.")
 
+        if any(char.isdigit() for char in datos["nombre"]):
+            raise ValueError("El nombre no puede contener números.")
+
         if not datos.get("apellido"):
             raise ValueError("El apellido no puede estar vacío.")
+
+        if any(char.isdigit() for char in datos["apellido"]):
+            raise ValueError("El apellido no puede contener números.")
 
         if not datos.get("matricula"):
             raise ValueError("La matrícula no puede estar vacía.")
@@ -46,14 +52,20 @@ class MedicoController:
         if not medico:
             raise ValueError("El médico no existe.")
 
-        if not datos.get("dni") or len(datos["dni"]) < 7:
-            raise ValueError("El DNI es inválido.")
+        if not datos.get("dni") or not datos["dni"].isdigit() or int(datos["dni"]) <= 0 or len(datos["dni"]) < 7:
+            raise ValueError("El DNI es inválido. Debe ser un número positivo de al menos 7 dígitos.")
 
         if not datos.get("nombre"):
             raise ValueError("El nombre no puede estar vacío.")
 
+        if any(char.isdigit() for char in datos["nombre"]):
+            raise ValueError("El nombre no puede contener números.")
+
         if not datos.get("apellido"):
             raise ValueError("El apellido no puede estar vacío.")
+
+        if any(char.isdigit() for char in datos["apellido"]):
+            raise ValueError("El apellido no puede contener números.")
 
         if not datos.get("matricula"):
             raise ValueError("La matrícula no puede estar vacía.")

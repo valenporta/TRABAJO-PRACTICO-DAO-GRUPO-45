@@ -1,0 +1,3 @@
+# Ignorar cachés de Python en todas las carpetas
+*/__pycache__/
+*.py[cod]
