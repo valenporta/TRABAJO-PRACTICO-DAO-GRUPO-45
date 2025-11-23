@@ -50,9 +50,10 @@ class MedicoController:
 
         self.service.crear(medico)
 
-        for esp_id in datos["especialidades"]:
-            self.medico_especialidad_service.asignar(medico.id_medico, esp_id)
-
+        self.medico_especialidad_service.asignar(
+        medico.id_medico,
+        datos["id_especialidad"]
+    )
         return medico   
 
     # Actualizar
