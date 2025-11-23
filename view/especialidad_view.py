@@ -53,6 +53,7 @@ class EspecialidadView(tk.Frame):
     # -----------------------------
     # Funciones CRUD
     # -----------------------------
+    
     def cargar(self):
         for fila in self.tabla.get_children():
             self.tabla.delete(fila)
