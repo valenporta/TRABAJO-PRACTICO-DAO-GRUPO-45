@@ -8,6 +8,7 @@ from services.database import DatabaseConnection
 from view.paciente_view import PacienteView
 from view.medico_view import MedicoView
 from view.especialidad_view import EspecialidadView
+from view.agenda_view import AgendaView
 
 
 class MenuPrincipal(tk.Frame):
@@ -27,6 +28,9 @@ class MenuPrincipal(tk.Frame):
 
         tk.Button(self, text="ABM Especialidades",
                   command=self.abrir_especialidades, width=25).pack(pady=10)
+
+        tk.Button(self, text="Gestión de Agenda",
+                  command=self.abrir_agenda, width=25).pack(pady=10)
 
     # -----------------------------------------
     # Abrir ventanas
@@ -49,6 +53,12 @@ class MenuPrincipal(tk.Frame):
         ventana.geometry("500x400")
         EspecialidadView(ventana)
 
+    def abrir_agenda(self):
+        ventana = tk.Toplevel(self)
+        ventana.title("Gestión de Agenda Médica")
+        ventana.geometry("900x600")
+        AgendaView(ventana)
+
 
 # -----------------------------------------
 # PROGRAMA PRINCIPAL
@@ -60,7 +70,8 @@ if __name__ == "__main__":
 
     root = tk.Tk()
     root.title("Sistema de Turnos Médicos")
-    root.geometry("400x400")
+    # Ajusté la altura a 500 para que quepa el nuevo botón
+    root.geometry("400x500") 
 
     MenuPrincipal(root)
 
