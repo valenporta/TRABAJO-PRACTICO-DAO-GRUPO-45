@@ -219,3 +219,23 @@ class TurnoService:
         for row in rows:
             turnos.append({"id_turno": row[0], "hora": row[1]})
         return turnos
+    
+    def obtener_turnos_por_medico_y_rango(self, id_medico, fecha_inicio, fecha_fin):
+        query = """
+            SELECT 
+                t.fecha,
+                t.hora,
+                p.nombre || ' ' || p.apellido as paciente,
+                p.dni,
+                e.nombre as estado,
+                t.motivo
+            FROM turno t
+            JOIN paciente p ON t.id_paciente = p.id_paciente
+            JOIN estado_turno e ON t.id_estado = e.id_estado
+            WHERE t.id_medico = ? 
+            AND t.fecha BETWEEN ? AND ?
+            ORDER BY t.fecha, t.hora
+        """
+        self.cur.execute(query, (id_medico, fecha_inicio, fecha_fin))
+        return self.cur.fetchall()
+

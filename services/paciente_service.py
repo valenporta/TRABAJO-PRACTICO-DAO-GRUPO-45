@@ -147,3 +147,25 @@ class PacienteService:
     def eliminar(self, id_paciente):
         self.cur.execute("DELETE FROM paciente WHERE id_paciente = ?", (id_paciente,))
         self.con.commit()
+
+    def obtener_pacientes_atendidos_en_rango(self, fecha_inicio, fecha_fin):
+        # Modificación: Agregamos "AND e.nombre = 'Atendido'" para filtrar
+        query = """
+            SELECT 
+                t.fecha,
+                t.hora,
+                p.nombre,
+                p.apellido,
+                p.dni,
+                m.apellido as medico,
+                e.nombre as estado
+            FROM turno t
+            JOIN paciente p ON t.id_paciente = p.id_paciente
+            JOIN medico m ON t.id_medico = m.id_medico
+            JOIN estado_turno e ON t.id_estado = e.id_estado
+            WHERE (t.fecha BETWEEN ? AND ?) 
+            AND e.nombre = 'Atendido'
+            ORDER BY t.fecha, p.apellido
+        """
+        self.cur.execute(query, (fecha_inicio, fecha_fin))
+        return self.cur.fetchall()
