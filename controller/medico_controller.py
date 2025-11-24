@@ -95,7 +95,21 @@ class MedicoController:
         medico.matricula = datos["matricula"]
         medico.telefono = datos.get("telefono")
 
-        self.service.actualizar(medico)
+        self.service.actualizar(medico) 
+
+        # ---------------------------------------------------------------
+        # 2. SOLUCIÓN: Actualizar la Especialidad en la tabla intermedia
+        # ---------------------------------------------------------------
+        id_especialidad_nuevo = datos.get("id_especialidad")
+        
+        if id_especialidad_nuevo is not None:
+            # Eliminar la/s especialidad/es anterior/es del médico
+            self.medico_especialidad_service.eliminar_por_medico(id_medico)
+            
+            # Asignar la nueva especialidad
+            self.medico_especialidad_service.asignar(
+                id_medico,
+                id_especialidad_nuevo)
         return medico
 
     # Eliminar

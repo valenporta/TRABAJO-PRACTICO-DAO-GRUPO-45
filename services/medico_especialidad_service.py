@@ -23,6 +23,11 @@ class MedicoEspecialidadService:
         """, (id_medico,))
         return [row[0] for row in self.cur.fetchall()]
     
+    def eliminar_por_medico(self, id_medico):
+        """Elimina todas las asignaciones de especialidades para un médico dado."""
+        self.cur.execute("DELETE FROM medico_especialidad WHERE id_medico = ?", (id_medico,))
+        self.con.commit()
+
     def obtener_especialidades_de_medico(self, id_medico):
         self.cur.execute("""
             SELECT e.nombre

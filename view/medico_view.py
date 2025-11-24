@@ -127,18 +127,72 @@ class MedicoView(tk.Frame):
 
     def actualizar(self):
         try:
+            # 1. Obtener la especialidad seleccionada del Combobox
+            especialidad_seleccionada = self.cb_especialidad.get()
+            
+            # 2. Extraer el ID de la especialidad (ej: "4 - Ginecología" -> 4)
+            # Asumo que el Combobox está poblado con strings del tipo "ID - Nombre"
+            if " - " not in especialidad_seleccionada:
+                 raise ValueError("Debe seleccionar una especialidad válida de la lista.")
+
+            id_especialidad_nuevo = int(especialidad_seleccionada.split(" - ")[0])
+
+            # 3. Recolectar datos incluyendo el ID de la especialidad
             datos = {
                 "dni": self.dni.get(),
                 "nombre": self.nombre.get(),
                 "apellido": self.apellido.get(),
                 "matricula": self.matricula.get(),
-                "telefono": self.telefono.get()
+                "telefono": self.telefono.get(),
+                "id_especialidad": id_especialidad_nuevo # <-- ¡SOLUCIÓN!
             }
+            
             self.controller.actualizar_medico(self.selected_id, datos)
             messagebox.showinfo("Éxito", "Médico actualizado.")
-            self.cargar_medicos()
+            self.cargar_medicos() # Recargar la tabla para mostrar el cambio
         except Exception as e:
             messagebox.showerror("Error", str(e))
+
+    # ------------------------------
+    # Auxiliares: Seleccionar fila (Cambio 2)
+    # ------------------------------
+    def seleccionar(self, event):
+        item = self.tabla.focus()
+        vals = self.tabla.item(item, "values")
+        if not vals:
+            return
+
+        self.selected_id = vals[0]
+
+        self.dni.delete(0, tk.END)
+        self.dni.insert(0, vals[1])
+
+        self.nombre.delete(0, tk.END)
+        self.nombre.insert(0, vals[2])
+
+        self.apellido.delete(0, tk.END)
+        self.apellido.insert(0, vals[3])
+
+        self.matricula.delete(0, tk.END)
+        self.matricula.insert(0, vals[4])
+
+        self.telefono.delete(0, tk.END)
+        self.telefono.insert(0, vals[5])
+        
+        # -------------------------------------------------------------
+        # SOLUCIÓN DE VISUALIZACIÓN: Cargar Especialidad seleccionada
+        # -------------------------------------------------------------
+        especialidad_actual_nombre = vals[6] # Asumo que el nombre de la especialidad está en la columna 6 de la tabla
+        
+        # Recorre las opciones del Combobox (ej: ["1 - Pediatría", "2 - Cardiología"])
+        found_value = ""
+        for item_cb in self.cb_especialidad['values']:
+            # Busca la opción que contenga el nombre de la especialidad actual
+            if especialidad_actual_nombre and especialidad_actual_nombre in item_cb:
+                found_value = item_cb
+                break
+        
+        self.cb_especialidad.set(found_value)
 
     def eliminar(self):
         try:
