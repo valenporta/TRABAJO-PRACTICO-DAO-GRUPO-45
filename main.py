@@ -17,6 +17,8 @@ from view.historia_clinica_view import HistoriaClinicaView
 
 from view.reporte_medico_view import ReporteMedicoView
 from view.reporte_pacientes_view import ReportePacientesView
+from view.reporte_especialidad_view import ReporteEspecialidadView
+from view.reporte_estadistico_view import ReporteEstadisticoView
 
 
 class MenuPrincipal(tk.Frame):
@@ -71,23 +73,31 @@ class MenuPrincipal(tk.Frame):
     def abrir_menu_reportes(self):
         ventana_rep = tk.Toplevel(self)
         ventana_rep.title("Seleccionar Reporte")
-        ventana_rep.geometry("300x200")
+        ventana_rep.geometry("300x250") # Aumenté un poco el alto
         ventana_rep.resizable(False, False)
         
         x = self.master.winfo_x() + (self.master.winfo_width() // 2) - 150
-        y = self.master.winfo_y() + (self.master.winfo_height() // 2) - 100
+        y = self.master.winfo_y() + (self.master.winfo_height() // 2) - 125
         ventana_rep.geometry(f"+{x}+{y}")
 
         lbl = tk.Label(ventana_rep, text="Seleccione el reporte a generar:", font=("Arial", 10))
-        lbl.pack(pady=15)
+        lbl.pack(pady=10)
 
         ttk.Button(ventana_rep, text="Turnos por Médico", 
                    command=lambda: [self.abrir_reporte_medico(), ventana_rep.destroy()], 
-                   width=25).pack(pady=5)
+                   width=25).pack(pady=3)
 
         ttk.Button(ventana_rep, text="Pacientes Atendidos", 
                    command=lambda: [self.abrir_reporte_pacientes(), ventana_rep.destroy()], 
-                   width=25).pack(pady=5)
+                   width=25).pack(pady=3)
+
+        ttk.Button(ventana_rep, text="Turnos por Especialidad", 
+                   command=lambda: [self.abrir_reporte_especialidad(), ventana_rep.destroy()], 
+                   width=25).pack(pady=3)
+
+        ttk.Button(ventana_rep, text="Estadística de Asistencia", 
+                   command=lambda: [self.abrir_reporte_estadistico(), ventana_rep.destroy()], 
+                   width=25).pack(pady=3)
 
 
     # -----------------------------------------
@@ -134,12 +144,16 @@ class MenuPrincipal(tk.Frame):
     # Abrir ventanas de Reportes (Vistas que son Toplevel)
     # -----------------------------------------
     def abrir_reporte_medico(self):
-        # CORRECCIÓN: Instanciamos directamente porque la clase hereda de Toplevel
         ReporteMedicoView(self)
 
     def abrir_reporte_pacientes(self):
-        # CORRECCIÓN: Instanciamos directamente porque la clase hereda de Toplevel
         ReportePacientesView(self)
+
+    def abrir_reporte_especialidad(self):
+        ReporteEspecialidadView(self)
+
+    def abrir_reporte_estadistico(self):
+        ReporteEstadisticoView(self)
 
     def cargar_header(self, path, width):
         """Carga y muestra la imagen de encabezado."""

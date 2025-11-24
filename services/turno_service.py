@@ -239,3 +239,45 @@ class TurnoService:
         self.cur.execute(query, (id_medico, fecha_inicio, fecha_fin))
         return self.cur.fetchall()
 
+    def obtener_cantidad_turnos_por_especialidad(self, fecha_inicio=None, fecha_fin=None):
+        query = """
+            SELECT 
+                e.nombre as especialidad,
+                COUNT(t.id_turno) as cantidad
+            FROM turno t
+            JOIN medico m ON t.id_medico = m.id_medico
+            JOIN medico_especialidad me ON m.id_medico = me.id_medico
+            JOIN especialidad e ON me.id_especialidad = e.id_especialidad
+            WHERE 1=1
+        """
+        params = []
+        if fecha_inicio and fecha_fin:
+            query += " AND t.fecha BETWEEN ? AND ?"
+            params.extend([fecha_inicio, fecha_fin])
+            
+        query += """
+            GROUP BY e.nombre
+            ORDER BY cantidad DESC
+        """
+        self.cur.execute(query, tuple(params))
+        return self.cur.fetchall()
+
+    def obtener_cantidad_turnos_por_estado(self, fecha_inicio=None, fecha_fin=None):
+        query = """
+            SELECT 
+                et.nombre as estado,
+                COUNT(t.id_turno) as cantidad
+            FROM turno t
+            JOIN estado_turno et ON t.id_estado = et.id_estado
+            WHERE 1=1
+        """
+        params = []
+        if fecha_inicio and fecha_fin:
+            query += " AND t.fecha BETWEEN ? AND ?"
+            params.extend([fecha_inicio, fecha_fin])
+
+        query += """
+            GROUP BY et.nombre
+        """
+        self.cur.execute(query, tuple(params))
+        return self.cur.fetchall()
