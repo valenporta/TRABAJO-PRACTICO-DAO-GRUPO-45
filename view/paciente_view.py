@@ -1,14 +1,19 @@
 # view/paciente_view.py
 
+# view/paciente_view.py
+
 import tkinter as tk
 from tkinter import ttk, messagebox
-from controller.paciente_controller import PacienteController
+# Asegúrate de que PacienteController esté disponible y tenga la lógica actualizada
+from controller.paciente_controller import PacienteController 
 
 
 class PacienteView(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.controller = PacienteController()
+        # Inicializamos selected_id para rastrear qué paciente estamos editando/eliminando
+        self.selected_id = None 
         self.pack(fill="both", expand=True)
 
         self.create_widgets()
@@ -129,7 +134,8 @@ class PacienteView(tk.Frame):
 
         datos = self.tabla.item(seleccionado, "values")
 
-        self.selected_id = datos[0]
+        # Guardar el ID seleccionado para las operaciones de Actualizar/Eliminar
+        self.selected_id = datos[0] 
 
         # Completar formulario
         self.entry_dni.delete(0, tk.END)
@@ -151,13 +157,15 @@ class PacienteView(tk.Frame):
         self.entry_fecha.insert(0, datos[6])
 
     # -------------------------------------------
-    # Actualizar paciente
+    # Actualizar paciente (Función del botón)
     # -------------------------------------------
     def actualizar_paciente(self):
         try:
-            if not hasattr(self, "selected_id"):
+            # 1. Verificar si hay un ID seleccionado
+            if self.selected_id is None:
                 raise ValueError("Seleccione un paciente de la tabla.")
 
+            # 2. Recolectar datos del formulario
             datos = {
                 "dni": self.entry_dni.get(),
                 "nombre": self.entry_nombre.get(),
@@ -166,12 +174,17 @@ class PacienteView(tk.Frame):
                 "email": self.entry_email.get(),
                 "fecha_nac": self.entry_fecha.get()
             }
-
-            self.controller.actualizar_paciente(self.selected_id, datos)
+            
+            # 3. Llamar al controlador. El controlador se encarga de la validación
+            #    del DNI excluyendo self.selected_id.
+            self.controller.actualizar_paciente(self.selected_id, datos) 
+            
             messagebox.showinfo("Éxito", "Paciente actualizado correctamente.")
             self.cargar_pacientes()
+            self.limpiar_formulario() # Limpiar después de la operación
 
         except Exception as e:
+            # Captura el error lanzado por el controlador (incluyendo "Ya existe otro paciente con ese DNI.")
             messagebox.showerror("Error", str(e))
 
     # -------------------------------------------
@@ -179,7 +192,7 @@ class PacienteView(tk.Frame):
     # -------------------------------------------
     def eliminar_paciente(self):
         try:
-            if not hasattr(self, "selected_id"):
+            if self.selected_id is None:
                 raise ValueError("Seleccione un paciente para eliminar.")
 
             if messagebox.askyesno("Confirmar", "¿Eliminar este paciente?"):
@@ -202,4 +215,5 @@ class PacienteView(tk.Frame):
         self.entry_email.delete(0, tk.END)
         self.entry_fecha.delete(0, tk.END)
 
+        # ⚠️ IMPORTANTE: Resetear el ID seleccionado después de limpiar
         self.selected_id = None

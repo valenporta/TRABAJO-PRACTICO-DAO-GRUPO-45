@@ -1,4 +1,3 @@
-
 from services.database import DatabaseConnection
 from model.paciente import Paciente
 
@@ -99,6 +98,29 @@ class PacienteService:
             fecha_nac=r[6],
             id_paciente=r[0]
         )
+        
+    # ---------------------------------------------------
+    # NUEVO MÉTODO: Validar DNI único (excluyendo ID)
+    # ---------------------------------------------------
+    def dni_existe_en_otro_paciente(self, dni, id_paciente_a_excluir=None):
+        """
+        Verifica si un DNI ya está registrado por OTRO paciente.
+        ...
+        """
+        
+        # Consulta base: busca un paciente con este DNI
+        query = "SELECT id_paciente FROM paciente WHERE dni = ?"
+        params = [dni]
+        
+        if id_paciente_a_excluir is not None:
+            # Añadir la condición de exclusión para ACTUALIZACIÓN
+            query += " AND id_paciente != ?"
+            params.append(id_paciente_a_excluir)
+            
+        self.cur.execute(query, tuple(params))
+        
+        # Si fetchone() devuelve un resultado, SÍ existe otro paciente con ese DNI.
+        return self.cur.fetchone() is not None
 
     # ---------------------------------------------------
     # Actualizar paciente
