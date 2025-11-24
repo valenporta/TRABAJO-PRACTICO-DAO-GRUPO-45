@@ -6,9 +6,9 @@ class ReporteMedicoView(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Reporte de Turnos por Médico")
-        self.geometry("900x600")
+        self.geometry("900x650")
         self.controller = ReporteController()
-        self.medicos_map = {} # Para mapear "Apellido, Nombre" -> ID
+        self.medicos_map = {} 
 
         self._init_ui()
 
@@ -30,7 +30,7 @@ class ReporteMedicoView(tk.Toplevel):
         self.entry_hasta = tk.Entry(frame_filtros)
         self.entry_hasta.grid(row=0, column=5, padx=5, pady=5)
 
-        tk.Button(frame_filtros, text="Generar Reporte", command=self._generar_reporte, bg="#4CAF50", fg="white").grid(row=0, column=6, padx=10, pady=5)
+        tk.Button(frame_filtros, text="Generar", command=self._generar_reporte, bg="#4CAF50", fg="white").grid(row=0, column=6, padx=10, pady=5)
 
         # --- Tabla ---
         columnas = ("fecha", "hora", "paciente", "dni", "estado", "motivo")
@@ -47,9 +47,15 @@ class ReporteMedicoView(tk.Toplevel):
             self.tree.column(col, width=120)
         self.tree.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # --- Footer ---
-        btn_export = tk.Button(self, text="Exportar a CSV", command=self._exportar, bg="#2196F3", fg="white")
-        btn_export.pack(pady=10)
+        # --- Footer (Botones de Exportación) ---
+        frame_btns = tk.Frame(self)
+        frame_btns.pack(pady=10)
+
+        btn_csv = tk.Button(frame_btns, text="Exportar a CSV", command=self._exportar_csv, bg="#2196F3", fg="white", width=15)
+        btn_csv.pack(side="left", padx=10)
+
+        btn_pdf = tk.Button(frame_btns, text="Exportar a PDF", command=self._exportar_pdf, bg="#E91E63", fg="white", width=15)
+        btn_pdf.pack(side="left", padx=10)
 
     def _cargar_medicos(self):
         medicos = self.controller.listar_medicos()
@@ -72,7 +78,6 @@ class ReporteMedicoView(tk.Toplevel):
         id_medico = self.medicos_map.get(medico_display)
 
         try:
-            # Limpiar tabla
             for item in self.tree.get_children():
                 self.tree.delete(item)
 
@@ -88,23 +93,42 @@ class ReporteMedicoView(tk.Toplevel):
         except ValueError as e:
             messagebox.showerror("Error", str(e))
 
-    def _exportar(self):
+    def _obtener_datos_actuales(self):
         items = self.tree.get_children()
         if not items:
+            return None
+        datos = []
+        for item in items:
+            datos.append(self.tree.item(item)['values'])
+        return datos
+
+    def _exportar_csv(self):
+        datos = self._obtener_datos_actuales()
+        if not datos:
             messagebox.showwarning("Atención", "No hay datos para exportar.")
             return
 
         filename = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV Files", "*.csv")])
-        if not filename:
+        if filename:
+            columnas = ["Fecha", "Hora", "Paciente", "DNI", "Estado", "Motivo"]
+            try:
+                self.controller.exportar_a_csv(datos, columnas, filename)
+                messagebox.showinfo("Éxito", "Reporte CSV exportado correctamente.")
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+
+    def _exportar_pdf(self):
+        datos = self._obtener_datos_actuales()
+        if not datos:
+            messagebox.showwarning("Atención", "No hay datos para exportar.")
             return
 
-        datos = []
-        for item in items:
-            datos.append(self.tree.item(item)['values'])
-
-        columnas = ["Fecha", "Hora", "Paciente", "DNI", "Estado", "Motivo"]
-        try:
-            self.controller.exportar_a_csv(datos, columnas, filename)
-            messagebox.showinfo("Éxito", "Reporte exportado correctamente.")
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
+        filename = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF Files", "*.pdf")])
+        if filename:
+            columnas = ["Fecha", "Hora", "Paciente", "DNI", "Estado", "Motivo"]
+            titulo = f"Reporte de Turnos - Médico: {self.combo_medicos.get()}"
+            try:
+                self.controller.exportar_a_pdf(datos, columnas, filename, titulo)
+                messagebox.showinfo("Éxito", "Reporte PDF generado correctamente.")
+            except Exception as e:
+                messagebox.showerror("Error", str(e))

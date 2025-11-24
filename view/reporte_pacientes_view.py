@@ -6,13 +6,12 @@ class ReportePacientesView(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Reporte de Pacientes Atendidos")
-        self.geometry("900x600")
+        self.geometry("900x650")
         self.controller = ReporteController()
         
         self._init_ui()
 
     def _init_ui(self):
-        # --- Filtros ---
         frame_filtros = tk.LabelFrame(self, text="Rango de Fechas")
         frame_filtros.pack(fill="x", padx=10, pady=5)
 
@@ -26,7 +25,6 @@ class ReportePacientesView(tk.Toplevel):
 
         tk.Button(frame_filtros, text="Buscar", command=self._generar_reporte, bg="#4CAF50", fg="white").pack(side="left", padx=15)
 
-        # --- Tabla ---
         columnas = ("fecha", "hora", "nombre", "apellido", "dni", "medico", "estado")
         self.tree = ttk.Treeview(self, columns=columnas, show="headings")
         
@@ -43,8 +41,14 @@ class ReportePacientesView(tk.Toplevel):
         self.tree.pack(fill="both", expand=True, padx=10, pady=10)
 
         # --- Footer ---
-        btn_export = tk.Button(self, text="Exportar a CSV", command=self._exportar, bg="#2196F3", fg="white")
-        btn_export.pack(pady=10)
+        frame_btns = tk.Frame(self)
+        frame_btns.pack(pady=10)
+
+        btn_csv = tk.Button(frame_btns, text="Exportar a CSV", command=self._exportar_csv, bg="#2196F3", fg="white", width=15)
+        btn_csv.pack(side="left", padx=10)
+
+        btn_pdf = tk.Button(frame_btns, text="Exportar a PDF", command=self._exportar_pdf, bg="#E91E63", fg="white", width=15)
+        btn_pdf.pack(side="left", padx=10)
 
     def _generar_reporte(self):
         f_desde = self.entry_desde.get()
@@ -66,23 +70,42 @@ class ReportePacientesView(tk.Toplevel):
         except ValueError as e:
             messagebox.showerror("Error", str(e))
 
-    def _exportar(self):
+    def _obtener_datos_actuales(self):
         items = self.tree.get_children()
         if not items:
+            return None
+        datos = []
+        for item in items:
+            datos.append(self.tree.item(item)['values'])
+        return datos
+
+    def _exportar_csv(self):
+        datos = self._obtener_datos_actuales()
+        if not datos:
             messagebox.showwarning("Atención", "No hay datos para exportar.")
             return
 
         filename = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV Files", "*.csv")])
-        if not filename:
+        if filename:
+            columnas = ["Fecha", "Hora", "Nombre", "Apellido", "DNI", "Médico", "Estado"]
+            try:
+                self.controller.exportar_a_csv(datos, columnas, filename)
+                messagebox.showinfo("Éxito", "Reporte CSV exportado correctamente.")
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+
+    def _exportar_pdf(self):
+        datos = self._obtener_datos_actuales()
+        if not datos:
+            messagebox.showwarning("Atención", "No hay datos para exportar.")
             return
 
-        datos = []
-        for item in items:
-            datos.append(self.tree.item(item)['values'])
-
-        columnas = ["Fecha", "Hora", "Nombre", "Apellido", "DNI", "Médico", "Estado"]
-        try:
-            self.controller.exportar_a_csv(datos, columnas, filename)
-            messagebox.showinfo("Éxito", "Reporte exportado correctamente.")
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
+        filename = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF Files", "*.pdf")])
+        if filename:
+            columnas = ["Fecha", "Hora", "Nombre", "Apellido", "DNI", "Médico", "Estado"]
+            titulo = f"Reporte de Pacientes Atendidos ({self.entry_desde.get()} al {self.entry_hasta.get()})"
+            try:
+                self.controller.exportar_a_pdf(datos, columnas, filename, titulo)
+                messagebox.showinfo("Éxito", "Reporte PDF generado correctamente.")
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
