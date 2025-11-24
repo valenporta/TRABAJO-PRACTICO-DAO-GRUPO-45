@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from model.turno import Turno
 from services.turno_service import TurnoService
 from services.paciente_service import PacienteService
 from services.medico_service import MedicoService
+from services.agenda_service import AgendaService
 
 
 class TurnoController:
@@ -12,6 +13,8 @@ class TurnoController:
         self.turno_service = TurnoService()
         self.paciente_service = PacienteService()
         self.medico_service = MedicoService()
+        # Inicializamos el servicio de agenda
+        self.agenda_service = AgendaService()
 
     def registrar_turno(self, datos: dict):
         turno = self._construir_turno(None, datos)
@@ -61,7 +64,8 @@ class TurnoController:
             raise ValueError("La fecha es obligatoria.")
 
         try:
-            fecha_valida = datetime.strptime(fecha, "%Y-%m-%d").strftime("%Y-%m-%d")
+            fecha_dt = datetime.strptime(fecha, "%Y-%m-%d")
+            fecha_valida = fecha_dt.strftime("%Y-%m-%d")
         except ValueError:
             raise ValueError("La fecha debe tener formato YYYY-MM-DD.")
 
@@ -70,12 +74,44 @@ class TurnoController:
             raise ValueError("La hora es obligatoria.")
 
         try:
-            hora_valida = datetime.strptime(hora, "%H:%M").strftime("%H:%M")
+            hora_dt = datetime.strptime(hora, "%H:%M")
+            hora_valida = hora_dt.strftime("%H:%M")
         except ValueError:
             raise ValueError("La hora debe tener formato HH:MM.")
 
-        if self.turno_service.existe_conflicto(id_medico, fecha_valida, hora_valida, excluir_id=id_turno):
-            raise ValueError("El medico ya tiene un turno asignado en ese horario.")
+        # --- VALIDACIONES DE AGENDA ---
+
+        # 1. Verificar si el medico trabaja ese dia
+        dia_semana = fecha_dt.weekday()
+        agenda = self.agenda_service.obtener_por_medico_y_dia(id_medico, dia_semana)
+
+        if not agenda:
+            dias_nombres = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"]
+            raise ValueError(f"El medico no tiene agenda configurada para los dias {dias_nombres[dia_semana]}.")
+
+        duracion_min = agenda.duracion_turno_min
+        
+        nuevo_inicio = hora_dt
+        nuevo_fin = nuevo_inicio + timedelta(minutes=duracion_min)
+
+        agenda_inicio = datetime.strptime(agenda.hora_desde, "%H:%M")
+        agenda_fin = datetime.strptime(agenda.hora_hasta, "%H:%M")
+
+        if nuevo_inicio < agenda_inicio or nuevo_fin > agenda_fin:
+             raise ValueError(f"El turno debe ser entre {agenda.hora_desde} y {agenda.hora_hasta} (Duracion: {duracion_min} min).")
+
+        turnos_existentes = self.turno_service.obtener_turnos_medico_fecha(id_medico, fecha_valida)
+
+        for t in turnos_existentes:
+            if id_turno and int(t["id_turno"]) == int(id_turno):
+                continue
+            t_inicio = datetime.strptime(t["hora"], "%H:%M")
+            t_fin = t_inicio + timedelta(minutes=duracion_min)
+
+            if nuevo_inicio < t_fin and nuevo_fin > t_inicio:
+                 raise ValueError(f"El horario se superpone con otro turno existente a las {t['hora']}.")
+
+        # --- FIN VALIDACIONES ---
 
         motivo = datos.get("motivo") or None
 

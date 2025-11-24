@@ -57,3 +57,22 @@ class AgendaService:
         
         row = self.cur.fetchone()
         return row is not None
+    
+    def obtener_por_medico_y_dia(self, id_medico, dia_semana):
+        self.cur.execute("""
+            SELECT id_agenda, id_medico, dia_semana, hora_desde, hora_hasta, duracion_turno_min
+            FROM agenda
+            WHERE id_medico = ? AND dia_semana = ?
+        """, (id_medico, dia_semana))
+        row = self.cur.fetchone()
+
+        if row:
+            return Agenda(
+                id_agenda=row[0],
+                id_medico=row[1],
+                dia_semana=row[2],
+                hora_desde=row[3],
+                hora_hasta=row[4],
+                duracion_turno_min=row[5]
+            )
+        return None
