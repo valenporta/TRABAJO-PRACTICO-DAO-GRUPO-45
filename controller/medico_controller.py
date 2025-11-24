@@ -1,4 +1,3 @@
-
 from services.medico_service import MedicoService
 from services.medico_especialidad_service import MedicoEspecialidadService
 from model.medico import Medico
@@ -11,29 +10,28 @@ class MedicoController:
 
     # Crear
     def crear_medico(self, datos: dict):
+        # Validaciones para CREACIÓN (usando los métodos existentes del servicio)
         if not datos.get("dni") or not datos["dni"].isdigit() or int(datos["dni"]) <= 0 or len(datos["dni"]) < 7:
             raise ValueError("El DNI es inválido. Debe ser un número positivo de al menos 7 dígitos.")
 
         if not datos.get("nombre"):
             raise ValueError("El nombre no puede estar vacío.")
-
         if any(char.isdigit() for char in datos["nombre"]):
             raise ValueError("El nombre no puede contener números.")
 
         if not datos.get("apellido"):
             raise ValueError("El apellido no puede estar vacío.")
-
         if any(char.isdigit() for char in datos["apellido"]):
             raise ValueError("El apellido no puede contener números.")
 
         if not datos.get("matricula"):
             raise ValueError("La matrícula no puede estar vacía.")
 
-        # Validar DNI único
+        # Validar DNI único (usando el método existente)
         if self.service.obtener_por_dni(datos["dni"]):
             raise ValueError("Ya existe un médico con ese DNI.")
 
-        # Validar matrícula única
+        # Validar matrícula única (usando el método existente)
         if self.service.obtener_por_matricula(datos["matricula"]):
             raise ValueError("Ya existe un médico con esa matrícula.")
         
@@ -63,33 +61,33 @@ class MedicoController:
         if not medico:
             raise ValueError("El médico no existe.")
 
+        # --- VALIDACIONES DE DATOS (DNI, Nombre, Apellido, Matrícula) ---
         if not datos.get("dni") or not datos["dni"].isdigit() or int(datos["dni"]) <= 0 or len(datos["dni"]) < 7:
             raise ValueError("El DNI es inválido. Debe ser un número positivo de al menos 7 dígitos.")
 
-        if not datos.get("nombre"):
-            raise ValueError("El nombre no puede estar vacío.")
+        if not datos.get("nombre") or any(char.isdigit() for char in datos["nombre"]):
+            raise ValueError("El nombre no puede estar vacío ni contener números.")
 
-        if any(char.isdigit() for char in datos["nombre"]):
-            raise ValueError("El nombre no puede contener números.")
-
-        if not datos.get("apellido"):
-            raise ValueError("El apellido no puede estar vacío.")
-
-        if any(char.isdigit() for char in datos["apellido"]):
-            raise ValueError("El apellido no puede contener números.")
+        if not datos.get("apellido") or any(char.isdigit() for char in datos["apellido"]):
+            raise ValueError("El apellido no puede estar vacío ni contener números.")
 
         if not datos.get("matricula"):
             raise ValueError("La matrícula no puede estar vacía.")
 
+
+        # ---------------------------------------------------------------
+        # SOLUCIÓN: Usar métodos especializados que excluyen el ID actual
+        # ---------------------------------------------------------------
+
         # DNI duplicado
-        otro = self.service.obtener_por_dni(datos["dni"])
-        if otro and otro.id_medico != id_medico:
+        if self.service.dni_existe_en_otro_medico(datos["dni"], id_medico):
             raise ValueError("Otro médico ya tiene ese DNI.")
 
         # Matrícula duplicada
-        otro = self.service.obtener_por_matricula(datos["matricula"])
-        if otro and otro.id_medico != id_medico:
+        if self.service.matricula_existe_en_otro_medico(datos["matricula"], id_medico):
             raise ValueError("Otro médico ya tiene esa matrícula.")
+        # ---------------------------------------------------------------
+
 
         medico.dni = datos["dni"]
         medico.nombre = datos["nombre"]

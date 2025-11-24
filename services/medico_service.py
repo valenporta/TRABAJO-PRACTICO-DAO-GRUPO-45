@@ -1,4 +1,3 @@
-
 from services.database import DatabaseConnection
 from model.medico import Medico
 
@@ -90,6 +89,35 @@ class MedicoService:
         if not r:
             return None
         return Medico(r[1], r[2], r[3], r[4], r[5], id_medico=r[0])
+
+    # ---------------------------------------------------
+    # NUEVO MÉTODO: Validar DNI único (excluyendo ID)
+    # ---------------------------------------------------
+    def dni_existe_en_otro_medico(self, dni, id_medico_a_excluir):
+        """
+        Verifica si un DNI ya está registrado por OTRO médico, excluyendo al ID actual.
+        """
+        query = "SELECT id_medico FROM medico WHERE dni = ? AND id_medico != ?"
+        
+        self.cur.execute(query, (dni, id_medico_a_excluir))
+        
+        # Si fetchone() devuelve un resultado, SÍ existe otro médico con ese DNI.
+        return self.cur.fetchone() is not None
+
+    # ---------------------------------------------------
+    # NUEVO MÉTODO: Validar Matrícula única (excluyendo ID)
+    # ---------------------------------------------------
+    def matricula_existe_en_otro_medico(self, matricula, id_medico_a_excluir):
+        """
+        Verifica si una Matrícula ya está registrada por OTRO médico, excluyendo al ID actual.
+        """
+        query = "SELECT id_medico FROM medico WHERE matricula = ? AND id_medico != ?"
+        
+        self.cur.execute(query, (matricula, id_medico_a_excluir))
+        
+        # Si fetchone() devuelve un resultado, SÍ existe otro médico con esa matrícula.
+        return self.cur.fetchone() is not None
+
 
     # Actualizar
     def actualizar(self, medico: Medico):

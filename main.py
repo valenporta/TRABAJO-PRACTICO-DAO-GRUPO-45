@@ -18,7 +18,6 @@ from view.historia_clinica_view import HistoriaClinicaView
 class MenuPrincipal(tk.Frame):
     def __init__(self, master):
         style = ttk.Style()
-        # Puedes probar 'clam', 'alt', 'default', 'classic'. 'clam' suele ser limpio.
         style.theme_use('clam')
         style.configure('TButton', font=('Arial', 10, 'bold'), 
                         padding=10, 
@@ -134,7 +133,7 @@ if __name__ == "__main__":
     seeder.run()
 
     root = tk.Tk()
-    # Ajusté la altura a 500 para que quepa el nuevo botón
+
     root.geometry("400x750")
     root.title("Sistema de Turnos Médicos")
     root.resizable(False, False)
