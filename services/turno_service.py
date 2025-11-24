@@ -205,3 +205,17 @@ class TurnoService:
 
         self.cur.execute(query, tuple(params))
         return self.cur.fetchone() is not None
+    
+    def obtener_turnos_medico_fecha(self, id_medico, fecha):
+        self.cur.execute("""
+            SELECT id_turno, hora
+            FROM turno
+            WHERE id_medico = ? AND fecha = ?
+        """, (id_medico, fecha))
+        rows = self.cur.fetchall()
+        
+        # Retornamos una lista de diccionarios o tuplas simples
+        turnos = []
+        for row in rows:
+            turnos.append({"id_turno": row[0], "hora": row[1]})
+        return turnos
