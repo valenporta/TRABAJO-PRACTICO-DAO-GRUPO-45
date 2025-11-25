@@ -20,6 +20,8 @@ from view.reporte_pacientes_view import ReportePacientesView
 from view.reporte_especialidad_view import ReporteEspecialidadView
 from view.reporte_estadistico_view import ReporteEstadisticoView
 
+from tkinter import messagebox
+
 
 class MenuPrincipal(tk.Frame):
     def __init__(self, master):

@@ -1,11 +1,19 @@
 from datetime import datetime
 
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet
+
 from services.paciente_service import PacienteService
 from services.turno_service import TurnoService
 from services.atencion_service import AtencionService
 from services.historia_clinica_service import HistoriaClinicaService
+from services.receta_service import RecetaService
+from services.medico_service import MedicoService
 from model.atencion import Atencion
 from model.historia_clinica import HistoriaClinica
+from model.receta import Receta
 
 
 class HistoriaClinicaController:
@@ -15,6 +23,8 @@ class HistoriaClinicaController:
         self.turno_service = TurnoService()
         self.atencion_service = AtencionService()
         self.historia_service = HistoriaClinicaService()
+        self.receta_service = RecetaService()
+        self.medico_service = MedicoService()
 
     def listar_pacientes(self):
         return self.paciente_service.obtener_todos()
@@ -96,13 +106,112 @@ class HistoriaClinicaController:
             )
             historia = self.historia_service.crear(nueva_historia)
 
+        # --- RECETA ELECTRONICA ---
+        detalle_receta = (datos.get("receta_detalle") or "").strip()
+        receta_creada = None
+        if detalle_receta:
+            # Verificar si ya existe receta para esta atencion (opcional, aqui asumimos una por atencion)
+            receta_existente = self.receta_service.obtener_por_atencion(atencion.id_atencion)
+            if not receta_existente:
+                nueva_receta = Receta(
+                    id_atencion=atencion.id_atencion,
+                    fecha=fecha_valida,
+                    detalle=detalle_receta
+                )
+                receta_creada = self.receta_service.crear(nueva_receta)
+            else:
+                # Si ya existe, podriamos actualizarla o dejarla como esta.
+                # Por simplicidad, retornamos la existente para generar PDF si se pide.
+                receta_creada = receta_existente
+
         estado_atendido = self._obtener_estado_turno("Atendido")
         if estado_atendido and turno.id_estado != estado_atendido.id_estado:
             turno.id_estado = estado_atendido.id_estado
             turno.estado_nombre = estado_atendido.nombre
             self.turno_service.actualizar(turno)
 
-        return historia
+        return historia, receta_creada
+
+    def crear_receta(self, id_atencion, detalle, fecha):
+        if not detalle:
+            raise ValueError("El detalle de la receta no puede estar vacío.")
+        
+        receta_existente = self.receta_service.obtener_por_atencion(id_atencion)
+        if receta_existente:
+            # Si existe, actualizamos el detalle (opcional) o retornamos la existente
+            # Vamos a actualizarla para permitir correcciones
+            # Pero RecetaService no tiene actualizar... vamos a asumir que creamos una nueva si no existe
+            # Ojo: RecetaService.crear hace INSERT.
+            # Deberíamos implementar actualizar en RecetaService si queremos editar.
+            # Por ahora, retornamos la existente y avisamos? O simplemente retornamos.
+            return receta_existente
+        
+        nueva_receta = Receta(
+            id_atencion=id_atencion,
+            fecha=fecha,
+            detalle=detalle
+        )
+        return self.receta_service.crear(nueva_receta)
+
+    def generar_pdf_receta(self, id_receta, ruta_archivo):
+        # Obtener datos completos para el PDF
+        # Necesitamos: Receta, Atencion, Turno, Medico, Paciente
+        # Como no tenemos un metodo que traiga todo junto, lo buscamos por partes.
+        
+        # 1. Receta (aunque ya tenemos el ID, podriamos pasar el objeto, pero mejor buscarlo para asegurar)
+        # Como RecetaService.obtener_por_id no existe en el plan, usamos obtener_por_atencion si tenemos id_atencion
+        # Pero aqui solo llega id_receta. Asumiremos que el caller tiene la receta o modificamos el service.
+        # Para simplificar, asumiremos que el caller paso el objeto receta o que modificamos el service.
+        # Vamos a asumir que el caller pasa el objeto receta o que buscamos por atencion si tenemos el dato.
+        # REVISION: El metodo recibe id_receta. Pero RecetaService no tiene obtener_por_id.
+        # Vamos a agregar obtener_por_id al service o cambiar este metodo para recibir el objeto Receta.
+        # Mejor cambiamos este metodo para recibir el objeto Receta completo y los datos necesarios.
+        pass 
+
+    def generar_pdf_receta_data(self, receta, paciente, medico, ruta_archivo):
+        try:
+            doc = SimpleDocTemplate(ruta_archivo, pagesize=letter)
+            elements = []
+            styles = getSampleStyleSheet()
+
+            # Encabezado
+            elements.append(Paragraph("RECETA MÉDICA ELECTRÓNICA", styles['Title']))
+            elements.append(Spacer(1, 12))
+
+            # Datos del Medico
+            datos_medico = [
+                [f"Dr/a: {medico.apellido}, {medico.nombre}"],
+                [f"Matrícula: {medico.matricula}"],
+                [f"Fecha: {receta.fecha}"]
+            ]
+            t_medico = Table(datos_medico, colWidths=[400])
+            t_medico.setStyle(TableStyle([('ALIGN', (0,0), (-1,-1), 'LEFT'), ('FONTNAME', (0,0), (-1,-1), 'Helvetica-Bold')]))
+            elements.append(t_medico)
+            elements.append(Spacer(1, 12))
+
+            # Datos del Paciente
+            datos_paciente = [
+                [f"Paciente: {paciente.apellido}, {paciente.nombre}"],
+                [f"DNI: {paciente.dni}"]
+            ]
+            t_paciente = Table(datos_paciente, colWidths=[400])
+            t_paciente.setStyle(TableStyle([('ALIGN', (0,0), (-1,-1), 'LEFT')]))
+            elements.append(t_paciente)
+            elements.append(Spacer(1, 20))
+
+            # Detalle de la Receta
+            elements.append(Paragraph("Prescripción:", styles['Heading3']))
+            elements.append(Spacer(1, 5))
+            elements.append(Paragraph(receta.detalle, styles['BodyText']))
+            elements.append(Spacer(1, 40))
+
+            # Firma (Simulada)
+            elements.append(Paragraph("_" * 30, styles['Normal']))
+            elements.append(Paragraph("Firma y Sello del Médico", styles['Normal']))
+
+            doc.build(elements)
+        except Exception as e:
+            raise Exception(f"Error al generar PDF de receta: {str(e)}")
 
     def _parsear_id(self, valor, nombre):
         if valor is None or valor == "":

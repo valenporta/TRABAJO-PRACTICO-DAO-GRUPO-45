@@ -1,12 +1,7 @@
-# view/paciente_view.py
-
-# view/paciente_view.py
-
 import tkinter as tk
 from tkinter import ttk, messagebox
-# Asegúrate de que PacienteController esté disponible y tenga la lógica actualizada
-from controller.paciente_controller import PacienteController 
-
+from controller.paciente_controller import PacienteController
+from controller.recordatorio_controller import RecordatorioController
 
 class PacienteView(tk.Frame):
     def __init__(self, master):
@@ -65,6 +60,9 @@ class PacienteView(tk.Frame):
         tk.Button(btn_frame, text="Actualizar", command=self.actualizar_paciente, width=12).pack(side="left", padx=5)
         tk.Button(btn_frame, text="Eliminar", command=self.eliminar_paciente, width=12).pack(side="left", padx=5)
         tk.Button(btn_frame, text="Limpiar", command=self.limpiar_formulario, width=12).pack(side="left", padx=5)
+        
+        # Boton Recordatorios
+        tk.Button(btn_frame, text="Recordatorios", command=self.enviar_recordatorios, width=12, bg="#FFC107").pack(side="left", padx=5)
 
         # ----- TABLA -----
         tabla_frame = tk.Frame(self)
@@ -217,3 +215,12 @@ class PacienteView(tk.Frame):
 
         # ⚠️ IMPORTANTE: Resetear el ID seleccionado después de limpiar
         self.selected_id = None
+
+    def enviar_recordatorios(self):
+        if messagebox.askyesno("Confirmar", "¿Desea enviar los recordatorios para los turnos de mañana?"):
+            try:
+                controller = RecordatorioController()
+                enviados, errores = controller.enviar_recordatorios_manana()
+                messagebox.showinfo("Proceso Finalizado", f"Se enviaron {enviados} recordatorios.\nErrores/Sin email: {errores}")
+            except Exception as e:
+                messagebox.showerror("Error", f"Ocurrió un error: {str(e)}")
