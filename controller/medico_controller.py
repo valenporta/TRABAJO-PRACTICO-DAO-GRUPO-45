@@ -35,6 +35,9 @@ class MedicoController:
         if self.service.obtener_por_matricula(datos["matricula"]):
             raise ValueError("Ya existe un médico con esa matrícula.")
         
+        if datos.get("telefono") and not datos["telefono"].isdigit():
+            raise ValueError("El teléfono solo puede contener números.")
+        
         if not datos.get("id_especialidad"):
             raise ValueError("Debe seleccionarse una especialidad para el médico.")
 
