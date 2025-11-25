@@ -1,4 +1,3 @@
-
 import tkinter as tk
 from tkinter import ttk, messagebox
 from controller.medico_controller import MedicoController
@@ -13,89 +12,101 @@ class MedicoView(tk.Frame):
         self.pack(fill="both", expand=True)
         self.especialidad_service = EspecialidadService()
         self.medico_esp_service = MedicoEspecialidadService()
+        self.selected_id = None
         self.create_widgets()
         self.cargar_medicos()
         self.cargar_especialidades()
 
-    # ------------------------------
-    # UI
-    # ------------------------------
     def create_widgets(self):
-        form = tk.LabelFrame(self, text="Datos del Médico")
-        form.pack(fill="x", padx=10, pady=10)
+        # Usamos ttk.LabelFrame para el estilo 'clam'
+        form = ttk.LabelFrame(self, text="👨‍⚕️ Datos del Médico")
+        form.pack(fill="x", padx=15, pady=15)
+        
+        # Frame interno para controlar el grid
+        form_grid = tk.Frame(form)
+        form_grid.pack(padx=10, pady=5)
+        
+        # --- FILA 0: DNI y MATRÍCULA ---
+        tk.Label(form_grid, text="DNI:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        self.dni = ttk.Entry(form_grid, width=30) 
+        self.dni.grid(row=0, column=1, padx=5, pady=5)
+        
+        tk.Label(form_grid, text="Matrícula:").grid(row=0, column=2, sticky="w", padx=20, pady=5)
+        self.matricula = ttk.Entry(form_grid, width=30)
+        self.matricula.grid(row=0, column=3, padx=5, pady=5)
 
-        # DNI
-        tk.Label(form, text="DNI:").grid(row=0, column=0, sticky="w")
-        self.dni = tk.Entry(form)
-        self.dni.grid(row=0, column=1)
+        # --- FILA 1: NOMBRE y TELÉFONO ---
+        tk.Label(form_grid, text="Nombre:").grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        self.nombre = ttk.Entry(form_grid, width=30)
+        self.nombre.grid(row=1, column=1, padx=5, pady=5)
 
-        # Nombre
-        tk.Label(form, text="Nombre:").grid(row=1, column=0, sticky="w")
-        self.nombre = tk.Entry(form)
-        self.nombre.grid(row=1, column=1)
+        tk.Label(form_grid, text="Teléfono:").grid(row=1, column=2, sticky="w", padx=20, pady=5)
+        self.telefono = ttk.Entry(form_grid, width=30)
+        self.telefono.grid(row=1, column=3, padx=5, pady=5)
 
-        # Apellido
-        tk.Label(form, text="Apellido:").grid(row=2, column=0, sticky="w")
-        self.apellido = tk.Entry(form)
-        self.apellido.grid(row=2, column=1)
+        # --- FILA 2: APELLIDO y ESPECIALIDAD ---
+        tk.Label(form_grid, text="Apellido:").grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        self.apellido = ttk.Entry(form_grid, width=30)
+        self.apellido.grid(row=2, column=1, padx=5, pady=5)
 
-        # Matrícula
-        tk.Label(form, text="Matrícula:").grid(row=3, column=0, sticky="w")
-        self.matricula = tk.Entry(form)
-        self.matricula.grid(row=3, column=1)
+        tk.Label(form_grid, text="Especialidad:").grid(row=2, column=2, sticky="w", padx=20, pady=5)
+        self.cb_especialidad = ttk.Combobox(form_grid, state="readonly", width=28)
+        self.cb_especialidad.grid(row=2, column=3, padx=5, pady=5)
 
-        # Teléfono
-        tk.Label(form, text="Teléfono:").grid(row=4, column=0, sticky="w")
-        self.telefono = tk.Entry(form)
-        self.telefono.grid(row=4, column=1)
-
-        # Especialidad
-        tk.Label(form, text="Especialidad:").grid(row=5, column=0, sticky="w")
-        self.cb_especialidad = ttk.Combobox(form, state="readonly")
-        self.cb_especialidad.grid(row=5, column=1, padx=5, pady=5)
-
-        # BOTONES
         btns = tk.Frame(self)
-        btns.pack(fill="x", padx=10, pady=10)
+        btns.pack(fill="x", padx=15, pady=10)
+        
+        # Contenedor interno para centrar los botones
+        center_frame = tk.Frame(btns)
+        center_frame.pack(anchor="center") 
 
-        tk.Button(btns, text="Guardar", command=self.guardar).pack(side="left", padx=5)
-        tk.Button(btns, text="Actualizar", command=self.actualizar).pack(side="left", padx=5)
-        tk.Button(btns, text="Eliminar", command=self.eliminar).pack(side="left", padx=5)
-        tk.Button(btns, text="Limpiar", command=self.limpiar).pack(side="left", padx=5)
+        ttk.Button(center_frame, text="Guardar", command=self.guardar, style='TButton').pack(side="left", padx=5)
+        ttk.Button(center_frame, text="Actualizar", command=self.actualizar, style='TButton').pack(side="left", padx=5)
+        ttk.Button(center_frame, text="Eliminar", command=self.eliminar, style='TButton').pack(side="left", padx=5)
+        ttk.Button(center_frame, text="Limpiar", command=self.limpiar, style='TButton').pack(side="left", padx=5)
 
         # TABLA
         table_frame = tk.Frame(self)
-        table_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        table_frame.pack(fill="both", expand=True, padx=15, pady=10)
 
         cols = ("id", "dni", "nombre", "apellido", "matricula", "telefono", "especialidades")
         self.tabla = ttk.Treeview(table_frame, columns=cols, show="headings")
 
-        # Configurar cabeceras para ordenamiento
+        # Configuración de Encabezados y Ordenamiento
         for c in cols:
             self.tabla.heading(c, text=c.capitalize(), command=lambda col=c: self.ordenar_columna(col, False))
-            self.tabla.column(c, width=120)
-
+        
+        # Configuración de Columnas
+        self.tabla.column("id", width=50, anchor="center")
+        self.tabla.column("dni", width=100)
+        self.tabla.column("nombre", width=120)
+        self.tabla.column("apellido", width=120)
+        self.tabla.column("matricula", width=80)
+        self.tabla.column("telefono", width=100)
+        self.tabla.column("especialidades", width=150)
+        
+        # Añadir Scrollbar
+        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.tabla.yview)
+        self.tabla.configure(yscrollcommand=scrollbar.set)
+        
+        scrollbar.pack(side="right", fill="y")
         self.tabla.pack(fill="both", expand=True)
         self.tabla.bind("<<TreeviewSelect>>", self.seleccionar)
 
     # -------------------------------------------
-    # Ordenar columnas
+    # Ordenar columnas 
     # -------------------------------------------
     def ordenar_columna(self, col, reverse):
-        # Obtener datos de la tabla
         l = [(self.tabla.set(k, col), k) for k in self.tabla.get_children('')]
         
-        # Intentar convertir a numero si es posible (para ID y DNI)
         try:
             l.sort(key=lambda t: int(t[0]), reverse=reverse)
         except ValueError:
             l.sort(key=lambda t: t[0].lower(), reverse=reverse)
 
-        # Reordenar items
         for index, (val, k) in enumerate(l):
             self.tabla.move(k, '', index)
 
-        # Actualizar comando para invertir orden en el proximo click
         self.tabla.heading(col, command=lambda: self.ordenar_columna(col, not reverse))
 
     # ------------------------------
@@ -123,8 +134,7 @@ class MedicoView(tk.Frame):
 
     def cargar_especialidades(self):
         especialidades = self.especialidad_service.obtener_todas()
-        print("DEBUG:", especialidades)
-
+        
         self.cb_especialidad["values"] = [
             f"{e.id_especialidad} - {e.nombre}" for e in especialidades
         ]
@@ -148,80 +158,28 @@ class MedicoView(tk.Frame):
 
     def actualizar(self):
         try:
-            # 1. Obtener la especialidad seleccionada del Combobox
+            if not self.selected_id:
+                 raise ValueError("Seleccione un médico de la tabla para actualizar.")
+                 
             especialidad_seleccionada = self.cb_especialidad.get()
             
-            # 2. Extraer el ID de la especialidad (ej: "4 - Ginecología" -> 4)
-            # Asumo que el Combobox está poblado con strings del tipo "ID - Nombre"
             if " - " not in especialidad_seleccionada:
-                 raise ValueError("Debe seleccionar una especialidad válida de la lista.")
+                raise ValueError("Debe seleccionar una especialidad válida de la lista.")
 
             id_especialidad_nuevo = int(especialidad_seleccionada.split(" - ")[0])
 
-            # 3. Recolectar datos incluyendo el ID de la especialidad
             datos = {
                 "dni": self.dni.get(),
                 "nombre": self.nombre.get(),
                 "apellido": self.apellido.get(),
                 "matricula": self.matricula.get(),
                 "telefono": self.telefono.get(),
-                "id_especialidad": id_especialidad_nuevo # <-- ¡SOLUCIÓN!
+                "id_especialidad": id_especialidad_nuevo 
             }
             
             self.controller.actualizar_medico(self.selected_id, datos)
             messagebox.showinfo("Éxito", "Médico actualizado.")
-            self.cargar_medicos() # Recargar la tabla para mostrar el cambio
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-
-    # ------------------------------
-    # Auxiliares: Seleccionar fila (Cambio 2)
-    # ------------------------------
-    def seleccionar(self, event):
-        item = self.tabla.focus()
-        vals = self.tabla.item(item, "values")
-        if not vals:
-            return
-
-        self.selected_id = vals[0]
-
-        self.dni.delete(0, tk.END)
-        self.dni.insert(0, vals[1])
-
-        self.nombre.delete(0, tk.END)
-        self.nombre.insert(0, vals[2])
-
-        self.apellido.delete(0, tk.END)
-        self.apellido.insert(0, vals[3])
-
-        self.matricula.delete(0, tk.END)
-        self.matricula.insert(0, vals[4])
-
-        self.telefono.delete(0, tk.END)
-        self.telefono.insert(0, vals[5])
-        
-        # -------------------------------------------------------------
-        # SOLUCIÓN DE VISUALIZACIÓN: Cargar Especialidad seleccionada
-        # -------------------------------------------------------------
-        especialidad_actual_nombre = vals[6] # Asumo que el nombre de la especialidad está en la columna 6 de la tabla
-        
-        # Recorre las opciones del Combobox (ej: ["1 - Pediatría", "2 - Cardiología"])
-        found_value = ""
-        for item_cb in self.cb_especialidad['values']:
-            # Busca la opción que contenga el nombre de la especialidad actual
-            if especialidad_actual_nombre and especialidad_actual_nombre in item_cb:
-                found_value = item_cb
-                break
-        
-        self.cb_especialidad.set(found_value)
-
-    def eliminar(self):
-        try:
-            if messagebox.askyesno("Confirmar", "¿Eliminar médico?"):
-                self.controller.eliminar_medico(self.selected_id)
-                messagebox.showinfo("Éxito", "Médico eliminado.")
-                self.cargar_medicos()
-                self.limpiar()
+            self.cargar_medicos() 
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
@@ -250,6 +208,29 @@ class MedicoView(tk.Frame):
 
         self.telefono.delete(0, tk.END)
         self.telefono.insert(0, vals[5])
+        
+        # SOLUCIÓN DE VISUALIZACIÓN: Cargar Especialidad seleccionada
+        especialidad_actual_nombre = vals[6] 
+        
+        found_value = ""
+        for item_cb in self.cb_especialidad['values']:
+            if especialidad_actual_nombre and especialidad_actual_nombre in item_cb:
+                found_value = item_cb
+                break
+        
+        self.cb_especialidad.set(found_value)
+
+    def eliminar(self):
+        try:
+            if not self.selected_id:
+                 raise ValueError("Seleccione un médico para eliminar.")
+            if messagebox.askyesno("Confirmar", "¿Eliminar médico?"):
+                self.controller.eliminar_medico(self.selected_id)
+                messagebox.showinfo("Éxito", "Médico eliminado.")
+                self.cargar_medicos()
+                self.limpiar()
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
     def limpiar(self):
         self.dni.delete(0, tk.END)
@@ -257,4 +238,5 @@ class MedicoView(tk.Frame):
         self.apellido.delete(0, tk.END)
         self.matricula.delete(0, tk.END)
         self.telefono.delete(0, tk.END)
+        self.cb_especialidad.set("") 
         self.selected_id = None
