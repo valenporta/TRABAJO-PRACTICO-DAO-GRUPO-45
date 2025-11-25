@@ -296,8 +296,9 @@ class HistoriaClinicaView(tk.Frame):
         modal.resizable(False, False)
 
         tk.Label(modal, text="Detalle de la prescripción:", font=("Arial", 10, "bold")).pack(anchor="w", padx=10, pady=10)
-        
+        # Insertar indicaciones como valor por defecto  
         txt_receta = tk.Text(modal, height=10)
+        txt_receta.insert("1.0", self.txt_indicaciones.get("1.0", tk.END).strip())
         txt_receta.pack(fill="both", expand=True, padx=10, pady=5)
 
         # Intentar cargar si ya existe
@@ -309,13 +310,14 @@ class HistoriaClinicaView(tk.Frame):
             pass
 
         def _guardar_receta():
+            diagnostico = self.txt_diagnostico.get("1.0", tk.END).strip()   
             detalle = txt_receta.get("1.0", tk.END).strip()
             if not detalle:
                 messagebox.showwarning("Aviso", "El detalle de la receta no puede estar vacío.", parent=modal)
                 return
             
             try:
-                receta = self.controller.crear_receta(historia.id_atencion, detalle, historia.fecha)
+                receta = self.controller.crear_receta(historia.id_atencion, detalle, historia.fecha, diagnostico)
                 
                 if messagebox.askyesno("Receta Guardada", "Receta generada correctamente.\n¿Desea descargar el PDF?", parent=modal):
                     from tkinter import filedialog
@@ -330,7 +332,7 @@ class HistoriaClinicaView(tk.Frame):
                         turno = next((t for t in self.turnos_actuales if t.id_turno == self.selected_turno_id), None)
                         medico = self.controller.medico_service.obtener_por_id(turno.id_medico)
                         
-                        self.controller.generar_pdf_receta_data(receta, paciente, medico, filename)
+                        self.controller.generar_pdf_receta_data(receta, paciente, medico, filename, diagnostico)
                         messagebox.showinfo("Exito", "PDF guardado correctamente.", parent=modal)
                 
                 modal.destroy()

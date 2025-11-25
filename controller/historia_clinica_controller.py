@@ -132,7 +132,7 @@ class HistoriaClinicaController:
 
         return historia, receta_creada
 
-    def crear_receta(self, id_atencion, detalle, fecha):
+    def crear_receta(self, id_atencion, detalle, fecha, diagnostico):
         if not detalle:
             raise ValueError("El detalle de la receta no puede estar vacío.")
         
@@ -148,8 +148,9 @@ class HistoriaClinicaController:
         
         nueva_receta = Receta(
             id_atencion=id_atencion,
-            fecha=fecha,
-            detalle=detalle
+            fecha=fecha,    
+            detalle=detalle,
+            diagnostico=diagnostico
         )
         return self.receta_service.crear(nueva_receta)
 
@@ -168,7 +169,7 @@ class HistoriaClinicaController:
         # Mejor cambiamos este metodo para recibir el objeto Receta completo y los datos necesarios.
         pass 
 
-    def generar_pdf_receta_data(self, receta, paciente, medico, ruta_archivo):
+    def generar_pdf_receta_data(self, receta, paciente, medico, ruta_archivo, diagnostico):
         try:
             doc = SimpleDocTemplate(ruta_archivo, pagesize=letter)
             elements = []
@@ -192,7 +193,8 @@ class HistoriaClinicaController:
             # Datos del Paciente
             datos_paciente = [
                 [f"Paciente: {paciente.apellido}, {paciente.nombre}"],
-                [f"DNI: {paciente.dni}"]
+                [f"DNI: {paciente.dni}"],
+                [f"Diagnostico: {diagnostico}"],
             ]
             t_paciente = Table(datos_paciente, colWidths=[400])
             t_paciente.setStyle(TableStyle([('ALIGN', (0,0), (-1,-1), 'LEFT')]))
