@@ -10,10 +10,14 @@ class AgendaView(tk.Frame):
         super().__init__(master)
         self.controller = AgendaController()
         self.medico_controller = MedicoController()
-        self.dias_map = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+        self.dias_map = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"] 
         self.medicos_filtrados = []
         self.medicos_por_id = {}
         self.selected_medico_id = None
+        self.selected_id_agenda = None
+        
+        self.var_id_medico = tk.StringVar()
+        self.var_nombre_medico = tk.StringVar(value="Sin médico seleccionado")
         
         self.pack(fill="both", expand=True)
         self.create_widgets()
@@ -21,79 +25,103 @@ class AgendaView(tk.Frame):
         self.selected_id_agenda = None
 
     def create_widgets(self):
-        search = tk.LabelFrame(self, text="Buscar médico")
-        search.pack(fill="x", padx=10, pady=10)
+        # -----------------------------------------------------------------
+        # SECCIÓN DE BÚSQUEDA DE MÉDICO 
+        # -----------------------------------------------------------------
+        search = ttk.LabelFrame(self, text="🔍 Buscar médico")
+        search.pack(fill="x", padx=15, pady=15)
 
-        tk.Label(search, text="Nombre o apellido:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
-        self.entry_buscar_medico = tk.Entry(search, width=30)
-        self.entry_buscar_medico.grid(row=0, column=1, padx=5, pady=5)
-        tk.Button(search, text="Buscar", command=self.buscar_medicos).grid(row=0, column=2, padx=5, pady=5)
+        search.columnconfigure(0, weight=1) 
+        search.columnconfigure(4, weight=1) 
 
-        self.lista_medicos = tk.Listbox(search, height=6, width=45)
-        self.lista_medicos.grid(row=1, column=0, columnspan=3, padx=5, pady=5, sticky="we")
+        # Input Label
+        tk.Label(search, text="Nombre o apellido:").grid(row=0, column=1, sticky="w", padx=5, pady=5) 
+        
+        # Entry
+        self.entry_buscar_medico = ttk.Entry(search, width=30) 
+        self.entry_buscar_medico.grid(row=0, column=2, padx=5, pady=5)
+        
+        # Botón Buscar
+        ttk.Button(search, text="Buscar", command=self.buscar_medicos, width=10).grid(row=0, column=3, padx=5, pady=5) 
+
+        # Listbox de resultados
+        self.lista_medicos = tk.Listbox(search, height=6, width=45, bd=1, relief="flat", bg="#F8F8F8")
+        # Usamos columnspan=4 para que se estire bajo las columnas 1, 2 y 3, pero se centre por 0 y 4
+        self.lista_medicos.grid(row=1, column=1, columnspan=3, padx=5, pady=5, sticky="we") 
         self.lista_medicos.bind("<<ListboxSelect>>", self.seleccionar_medico_lista)
 
-        form = tk.LabelFrame(self, text="Gestión de Agenda")
-        form.pack(fill="x", padx=10, pady=10)
+        # -----------------------------------------------------------------
+        # SECCIÓN DE GESTIÓN DE AGENDA 
+        # -----------------------------------------------------------------
+        form = ttk.LabelFrame(self, text="🗓️ Gestión de Agenda") 
+        form.pack(fill="x", padx=15, pady=10)
 
-        self.var_id_medico = tk.StringVar()
-        self.var_nombre_medico = tk.StringVar(value="Sin médico seleccionado")
-
-        tk.Label(form, text="ID Médico:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
-        self.entry_id_medico = tk.Entry(form, textvariable=self.var_id_medico, state="readonly")
+        # Sub-Frame para contener y alinear los campos
+        form_grid = tk.Frame(form)
+        form_grid.pack(padx=10, pady=5)
+        
+        # --- FILA 0: IDENTIFICACIÓN Y DÍA ---
+        tk.Label(form_grid, text="ID Médico:", anchor="w").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        self.entry_id_medico = ttk.Entry(form_grid, textvariable=self.var_id_medico, state="readonly", width=15)
         self.entry_id_medico.grid(row=0, column=1, padx=5, pady=5)
-
-        tk.Label(form, text="Médico seleccionado:").grid(row=0, column=2, sticky="w", padx=5, pady=5)
-        self.lbl_medico_nombre = tk.Label(form, textvariable=self.var_nombre_medico, anchor="w")
-        self.lbl_medico_nombre.grid(row=0, column=3, padx=5, pady=5)
-
-        # Día
-        tk.Label(form, text="Día:").grid(row=0, column=2, sticky="w", padx=5, pady=5)
-        self.combo_dia = ttk.Combobox(form, values=self.dias_map, state="readonly")
+        
+        tk.Label(form_grid, text="Día:", anchor="w").grid(row=0, column=2, sticky="w", padx=20, pady=5)
+        self.combo_dia = ttk.Combobox(form_grid, values=self.dias_map, state="readonly", width=15)
         self.combo_dia.grid(row=0, column=3, padx=5, pady=5)
         self.combo_dia.current(0)
 
-        # Hora Desde
-        tk.Label(form, text="Hora Inicio (HH:MM):").grid(row=1, column=0, sticky="w", padx=5, pady=5)
-        self.entry_hora_desde = tk.Entry(form)
+        # --- FILA 1: HORARIOS DE TRABAJO ---
+        tk.Label(form_grid, text="Hora Inicio (HH:MM):", anchor="w").grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        self.entry_hora_desde = ttk.Entry(form_grid, width=15)
         self.entry_hora_desde.grid(row=1, column=1, padx=5, pady=5)
 
-        # --- CAMBIO AQUÍ: Duración Jornada ---
-        tk.Label(form, text="Duración Jornada (Hs):").grid(row=1, column=2, sticky="w", padx=5, pady=5)
-        self.entry_duracion_horas = tk.Entry(form)
-        self.entry_duracion_horas.insert(0, "4") # Valor por defecto sugerido
+        tk.Label(form_grid, text="Duración Jornada (Hs):", anchor="w").grid(row=1, column=2, sticky="w", padx=20, pady=5)
+        self.entry_duracion_horas = ttk.Entry(form_grid, width=15)
+        self.entry_duracion_horas.insert(0, "4")
         self.entry_duracion_horas.grid(row=1, column=3, padx=5, pady=5)
-
-        # Duración Turno (Slots)
-        tk.Label(form, text="Duración Turno (min):").grid(row=2, column=0, sticky="w", padx=5, pady=5)
-        self.entry_duracion = tk.Entry(form)
+        
+        # --- FILA 2: DURACIÓN DE SLOTS ---
+        tk.Label(form_grid, text="Duración Turno (min):", anchor="w").grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        self.entry_duracion = ttk.Entry(form_grid, width=15)
         self.entry_duracion.insert(0, "30")
         self.entry_duracion.grid(row=2, column=1, padx=5, pady=5)
+        
+        # Etiqueta para el nombre del médico (Feedback visual)
+        tk.Label(form_grid, text="Médico Seleccionado:", fg="#4CAF50").grid(row=3, column=0, sticky="w", padx=5, pady=5, columnspan=2)
+        tk.Label(form_grid, textvariable=self.var_nombre_medico, fg="#4CAF50").grid(row=3, column=2, sticky="w", padx=5, pady=5, columnspan=2)
 
-        # Botones
+        # Botones de Acción
         btns = tk.Frame(self)
-        btns.pack(fill="x", padx=10, pady=10)
-        tk.Button(btns, text="🔍 Buscar Agendas del Médico", command=self.cargar).pack(side="left", padx=5)
-        tk.Frame(btns, width=20).pack(side="left")
-        tk.Button(btns, text="Guardar", command=self.guardar).pack(side="left", padx=5)
-        tk.Button(btns, text="Eliminar", command=self.eliminar).pack(side="left", padx=5)
-        tk.Button(btns, text="Limpiar Campos", command=self.limpiar).pack(side="left", padx=5)
+        btns.pack(fill="x", padx=15, pady=10)
+        
+        ttk.Button(btns, text="🔍 Buscar Agendas del Médico", command=self.cargar, style='TButton').pack(side="left", padx=5) 
+        ttk.Frame(btns, width=20).pack(side="left")
+        ttk.Button(btns, text="Guardar", command=self.guardar, style='TButton').pack(side="left", padx=5)
+        ttk.Button(btns, text="Eliminar", command=self.eliminar, style='TButton').pack(side="left", padx=5)
+        ttk.Button(btns, text="Limpiar Campos", command=self.limpiar, style='TButton').pack(side="left", padx=5)
 
-        # Tabla
+        # -----------------------------------------------------------------
+        # TABLA 
+        # -----------------------------------------------------------------
         table_frame = tk.Frame(self)
-        table_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        table_frame.pack(fill="both", expand=True, padx=15, pady=10)
 
         cols = ("id_agenda", "id_medico", "dia", "desde", "hasta", "duracion")
         self.tabla = ttk.Treeview(table_frame, columns=cols, show="headings")
-        self.tabla.heading("id_agenda", text="ID")
-        self.tabla.heading("id_medico", text="Médico")
+        
+        self.tabla.heading("id_agenda", text="ID Agenda")
+        self.tabla.heading("id_medico", text="ID Médico")
         self.tabla.heading("dia", text="Día")
-        self.tabla.heading("desde", text="Inicio")
-        self.tabla.heading("hasta", text="Fin")
+        self.tabla.heading("desde", text="Inicio (HH:MM)")
+        self.tabla.heading("hasta", text="Fin (HH:MM)")
         self.tabla.heading("duracion", text="Slot (min)")
         
-        for col in cols:
-            self.tabla.column(col, width=80)
+        self.tabla.column("id_agenda", width=70, anchor="center")
+        self.tabla.column("id_medico", width=80, anchor="center")
+        self.tabla.column("dia", width=100, anchor="w")
+        self.tabla.column("desde", width=100, anchor="center")
+        self.tabla.column("hasta", width=100, anchor="center")
+        self.tabla.column("duracion", width=80, anchor="center")
 
         self.tabla.pack(fill="both", expand=True)
         self.tabla.bind("<<TreeviewSelect>>", self.seleccionar)
@@ -110,6 +138,7 @@ class AgendaView(tk.Frame):
             agendas = self.controller.obtener_agendas_medico(self.selected_medico_id)
             for a in agendas:
                 nombre_dia = self.dias_map[a.dia_semana]
+                
                 self.tabla.insert("", "end", values=(
                     a.id_agenda, a.id_medico, nombre_dia,
                     a.hora_desde, a.hora_hasta, a.duracion_turno_min
@@ -120,7 +149,7 @@ class AgendaView(tk.Frame):
     def guardar(self):
         try:
             idx_dia = self.combo_dia.current()
-            if idx_dia < 0: idx_dia = 0
+            if idx_dia < 0: idx_dia = 0 
 
             if not self.selected_medico_id:
                 raise ValueError("Debe seleccionar un médico.")
@@ -163,8 +192,8 @@ class AgendaView(tk.Frame):
 
         try:
             fmt = "%H:%M"
-            t1 = datetime.strptime(vals[3], fmt) # Inicio
-            t2 = datetime.strptime(vals[4], fmt) # Fin
+            t1 = datetime.strptime(vals[3], fmt) 
+            t2 = datetime.strptime(vals[4], fmt) 
             diff = t2 - t1
             horas = diff.total_seconds() / 3600
             
@@ -235,6 +264,7 @@ class AgendaView(tk.Frame):
 
         medico = self.medicos_filtrados[idx]
         self.establecer_medico(medico.id_medico)
+        self.cargar()
 
     def establecer_medico(self, id_medico):
         medico = self.medicos_por_id.get(id_medico)
@@ -254,7 +284,6 @@ class AgendaView(tk.Frame):
         else:
             self.var_nombre_medico.set("Médico seleccionado")
 
-        # sincronizar selección del listbox si el médico está visible
         for idx, med in enumerate(self.medicos_filtrados):
             if med.id_medico == id_medico:
                 self.lista_medicos.selection_clear(0, tk.END)

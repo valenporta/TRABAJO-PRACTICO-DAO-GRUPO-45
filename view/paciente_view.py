@@ -1,83 +1,88 @@
-# view/paciente_view.py
-
-# view/paciente_view.py
-
 import tkinter as tk
 from tkinter import ttk, messagebox
-# Asegúrate de que PacienteController esté disponible y tenga la lógica actualizada
-from controller.paciente_controller import PacienteController 
+from controller.paciente_controller import PacienteController
 
 
 class PacienteView(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.controller = PacienteController()
-        # Inicializamos selected_id para rastrear qué paciente estamos editando/eliminando
         self.selected_id = None 
         self.pack(fill="both", expand=True)
 
         self.create_widgets()
         self.cargar_pacientes()
 
-    # -------------------------------------------
-    # Crear UI
-    # -------------------------------------------
     def create_widgets(self):
-        # ----- FORMULARIO -----
-        form_frame = tk.LabelFrame(self, text="Datos del Paciente")
-        form_frame.pack(fill="x", padx=10, pady=10)
+        form = ttk.LabelFrame(self, text="👤 Datos del Paciente")
+        form.pack(fill="x", padx=15, pady=15)
+        
+        # Frame interno para controlar el grid
+        form_grid = tk.Frame(form)
+        form_grid.pack(padx=10, pady=5)
 
         # DNI
-        tk.Label(form_frame, text="DNI:").grid(row=0, column=0, sticky="e", padx=5, pady=5)
-        self.entry_dni = tk.Entry(form_frame)
+        tk.Label(form_grid, text="DNI:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        self.entry_dni = ttk.Entry(form_grid, width=30) # Usamos ttk.Entry
         self.entry_dni.grid(row=0, column=1, padx=5, pady=5)
 
         # Nombre
-        tk.Label(form_frame, text="Nombre:").grid(row=1, column=0, sticky="e", padx=5, pady=5)
-        self.entry_nombre = tk.Entry(form_frame)
+        tk.Label(form_grid, text="Nombre:").grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        self.entry_nombre = ttk.Entry(form_grid, width=30)
         self.entry_nombre.grid(row=1, column=1, padx=5, pady=5)
 
         # Apellido
-        tk.Label(form_frame, text="Apellido:").grid(row=2, column=0, sticky="e", padx=5, pady=5)
-        self.entry_apellido = tk.Entry(form_frame)
+        tk.Label(form_grid, text="Apellido:").grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        self.entry_apellido = ttk.Entry(form_grid, width=30)
         self.entry_apellido.grid(row=2, column=1, padx=5, pady=5)
-
+        
         # Teléfono
-        tk.Label(form_frame, text="Teléfono:").grid(row=3, column=0, sticky="e", padx=5, pady=5)
-        self.entry_telefono = tk.Entry(form_frame)
-        self.entry_telefono.grid(row=3, column=1, padx=5, pady=5)
+        tk.Label(form_grid, text="Teléfono:").grid(row=0, column=2, sticky="w", padx=20, pady=5)
+        self.entry_telefono = ttk.Entry(form_grid, width=30)
+        self.entry_telefono.grid(row=0, column=3, padx=5, pady=5)
 
         # Email
-        tk.Label(form_frame, text="Email:").grid(row=4, column=0, sticky="e", padx=5, pady=5)
-        self.entry_email = tk.Entry(form_frame)
-        self.entry_email.grid(row=4, column=1, padx=5, pady=5)
+        tk.Label(form_grid, text="Email:").grid(row=1, column=2, sticky="w", padx=20, pady=5)
+        self.entry_email = ttk.Entry(form_grid, width=30)
+        self.entry_email.grid(row=1, column=3, padx=5, pady=5)
 
         # Fecha de nacimiento
-        tk.Label(form_frame, text="Fecha Nac (YYYY-MM-DD):").grid(row=5, column=0, sticky="e", padx=5, pady=5)
-        self.entry_fecha = tk.Entry(form_frame)
-        self.entry_fecha.grid(row=5, column=1, padx=5, pady=5)
+        tk.Label(form_grid, text="Fecha Nac (YYYY-MM-DD):").grid(row=2, column=2, sticky="w", padx=20, pady=5)
+        self.entry_fecha = ttk.Entry(form_grid, width=30)
+        self.entry_fecha.grid(row=2, column=3, padx=5, pady=5)
 
-        # BOTONES
-        btn_frame = tk.Frame(self)
-        btn_frame.pack(fill="x", pady=10)
 
-        tk.Button(btn_frame, text="Guardar", command=self.guardar_paciente, width=12).pack(side="left", padx=5)
-        tk.Button(btn_frame, text="Actualizar", command=self.actualizar_paciente, width=12).pack(side="left", padx=5)
-        tk.Button(btn_frame, text="Eliminar", command=self.eliminar_paciente, width=12).pack(side="left", padx=5)
-        tk.Button(btn_frame, text="Limpiar", command=self.limpiar_formulario, width=12).pack(side="left", padx=5)
+        # --- BOTONES (CENTRADOS) ---
+        
+        # Contenedor principal que ocupa todo el ancho
+        btns = tk.Frame(self)
+        btns.pack(fill="x", padx=15, pady=10)
+        
+        center_frame = tk.Frame(btns)
+        center_frame.pack(anchor="center") 
+
+        ttk.Button(center_frame, text="Guardar", command=self.guardar_paciente, style='TButton').pack(side="left", padx=5)
+        ttk.Button(center_frame, text="Actualizar", command=self.actualizar_paciente, style='TButton').pack(side="left", padx=5)
+        ttk.Button(center_frame, text="Eliminar", command=self.eliminar_paciente, style='TButton').pack(side="left", padx=5)
+        ttk.Button(center_frame, text="Limpiar", command=self.limpiar_formulario, style='TButton').pack(side="left", padx=5)
 
         # ----- TABLA -----
-        tabla_frame = tk.Frame(self)
-        tabla_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        table_frame = tk.Frame(self)
+        table_frame.pack(fill="both", expand=True, padx=15, pady=10) # Mayor padding
 
         columnas = ("id", "dni", "nombre", "apellido", "telefono", "email", "fecha_nac")
+        self.tabla = ttk.Treeview(table_frame, columns=columnas, show="headings", height=10)
 
-        self.tabla = ttk.Treeview(tabla_frame, columns=columnas, show="headings", height=10)
-
+        # Configuración de encabezados
         for col in columnas:
-            self.tabla.heading(col, text=col.capitalize())
-            self.tabla.column(col, width=120)
-
+            self.tabla.heading(col, text=col.replace('_', ' ').capitalize())
+            self.tabla.column(col, width=110)
+        
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.tabla.yview)
+        self.tabla.configure(yscrollcommand=scrollbar.set)
+        
+        scrollbar.pack(side="right", fill="y")
         self.tabla.pack(fill="both", expand=True)
         self.tabla.bind("<<TreeviewSelect>>", self.seleccionar_fila)
 
@@ -137,7 +142,7 @@ class PacienteView(tk.Frame):
         # Guardar el ID seleccionado para las operaciones de Actualizar/Eliminar
         self.selected_id = datos[0] 
 
-        # Completar formulario
+        # Limpiar y Completar formulario
         self.entry_dni.delete(0, tk.END)
         self.entry_dni.insert(0, datos[1])
 
@@ -162,7 +167,7 @@ class PacienteView(tk.Frame):
     def actualizar_paciente(self):
         try:
             # 1. Verificar si hay un ID seleccionado
-            if self.selected_id is None:
+            if not self.selected_id: # Usamos not self.selected_id en lugar de is None
                 raise ValueError("Seleccione un paciente de la tabla.")
 
             # 2. Recolectar datos del formulario
@@ -175,16 +180,14 @@ class PacienteView(tk.Frame):
                 "fecha_nac": self.entry_fecha.get()
             }
             
-            # 3. Llamar al controlador. El controlador se encarga de la validación
-            #    del DNI excluyendo self.selected_id.
+            # 3. Llamar al controlador para actualización (incluye validación DNI)
             self.controller.actualizar_paciente(self.selected_id, datos) 
             
             messagebox.showinfo("Éxito", "Paciente actualizado correctamente.")
             self.cargar_pacientes()
-            self.limpiar_formulario() # Limpiar después de la operación
+            self.limpiar_formulario() 
 
         except Exception as e:
-            # Captura el error lanzado por el controlador (incluyendo "Ya existe otro paciente con ese DNI.")
             messagebox.showerror("Error", str(e))
 
     # -------------------------------------------
@@ -192,7 +195,7 @@ class PacienteView(tk.Frame):
     # -------------------------------------------
     def eliminar_paciente(self):
         try:
-            if self.selected_id is None:
+            if not self.selected_id:
                 raise ValueError("Seleccione un paciente para eliminar.")
 
             if messagebox.askyesno("Confirmar", "¿Eliminar este paciente?"):
@@ -215,5 +218,4 @@ class PacienteView(tk.Frame):
         self.entry_email.delete(0, tk.END)
         self.entry_fecha.delete(0, tk.END)
 
-        # ⚠️ IMPORTANTE: Resetear el ID seleccionado después de limpiar
         self.selected_id = None

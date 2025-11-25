@@ -5,7 +5,6 @@ import os
 
 # Inicialización de Base de Datos
 from services.database import DatabaseConnection
-from services.data_seeder import DataSeeder
 
 # Vistas existentes
 from view.paciente_view import PacienteView
@@ -155,8 +154,7 @@ class MenuPrincipal(tk.Frame):
     def abrir_reporte_estadistico(self):
         ReporteEstadisticoView(self)
 
-    def cargar_header(self, path, width):
-        """Carga y muestra la imagen de encabezado."""
+    """def cargar_header(self, path, width):
         try:
             img = Image.open(path)
             ratio = width / img.width
@@ -171,6 +169,31 @@ class MenuPrincipal(tk.Frame):
                      font=("Arial", 18, "bold"), bg="#FFFFFF").pack(pady=20)
         except Exception as e:
             tk.Label(self.header_frame, text="Sistema de Turnos Médicos",
+                     font=("Arial", 18, "bold"), bg="#FFFFFF").pack(pady=20)"""
+    def cargar_header(self, path, width):
+        
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        ruta_completa = os.path.join(base_dir, path)
+        
+        try:
+            img = Image.open(ruta_completa) 
+            
+            ratio = width / img.width
+            height = int(img.height * ratio)
+            img = img.resize((width, height), Image.LANCZOS)
+            
+            self.header_img = ImageTk.PhotoImage(img)
+            tk.Label(self.header_frame, image=self.header_img, bg="#FFFFFF").pack(anchor="center", padx=10, pady=5)
+            
+        except FileNotFoundError:
+            # Informa la ruta que falló para depuración
+            print(f"Error: No se encontró el archivo de imagen en la ruta: {ruta_completa}") 
+            tk.Label(self.header_frame, text="Sistema de Turnos Médicos",
+                     font=("Arial", 18, "bold"), bg="#FFFFFF").pack(pady=20)
+        except Exception as e:
+            print(f"Error al cargar la imagen: {e}")
+            tk.Label(self.header_frame, text="Sistema de Turnos Médicos",
                      font=("Arial", 18, "bold"), bg="#FFFFFF").pack(pady=20)
 
 
@@ -182,9 +205,6 @@ if __name__ == "__main__":
     # Crear DB si no existe
     db = DatabaseConnection()
     db.initialize_database()
-
-    seeder = DataSeeder()
-    seeder.run()
 
     root = tk.Tk()
 
