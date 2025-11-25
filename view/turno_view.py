@@ -41,24 +41,29 @@ class TurnoView(tk.Frame):
         tk.Label(form_grid, text="Médico:").grid(row=0, column=2, sticky="w", padx=20, pady=5)
         self.combo_medico = ttk.Combobox(form_grid, state="readonly", width=35)
         self.combo_medico.grid(row=0, column=3, padx=5, pady=5)
+        self.combo_medico.bind("<<ComboboxSelected>>", self._mostrar_agenda_medico)
 
-        # --- FILA 1: FECHA y HORA ---
-        tk.Label(form_grid, text="Fecha (YYYY-MM-DD):").grid(row=1, column=0, sticky="w", padx=5, pady=5)
-        self.entry_fecha = ttk.Entry(form_grid, width=35) # Usamos ttk.Entry
-        self.entry_fecha.grid(row=1, column=1, padx=5, pady=5)
+        # Label para mostrar la agenda del médico seleccionado
+        self.lbl_agenda = tk.Label(form_grid, text="", font=("Arial", 8), fg="blue", justify="left")
+        self.lbl_agenda.grid(row=1, column=2, columnspan=2, sticky="w", padx=20)
 
-        tk.Label(form_grid, text="Hora (HH:MM):").grid(row=1, column=2, sticky="w", padx=20, pady=5)
-        self.entry_hora = ttk.Entry(form_grid, width=35) # Usamos ttk.Entry
-        self.entry_hora.grid(row=1, column=3, padx=5, pady=5)
+        # --- FILA 2: FECHA y HORA ---
+        tk.Label(form_grid, text="Fecha (YYYY-MM-DD):").grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        self.entry_fecha = tk.Entry(form_grid)
+        self.entry_fecha.grid(row=2, column=1, padx=5, pady=5)
 
-        # --- FILA 2: ESTADO y MOTIVO ---
-        tk.Label(form_grid, text="Estado:").grid(row=2, column=0, sticky="w", padx=5, pady=5)
-        self.combo_estado = ttk.Combobox(form_grid, state="readonly", width=35)
-        self.combo_estado.grid(row=2, column=1, padx=5, pady=5)
+        tk.Label(form_grid, text="Hora (HH:MM):").grid(row=2, column=2, sticky="w", padx=20, pady=5)
+        self.entry_hora = tk.Entry(form_grid)
+        self.entry_hora.grid(row=2, column=3, padx=5, pady=5)
 
-        tk.Label(form_grid, text="Motivo:").grid(row=2, column=2, sticky="w", padx=20, pady=5)
-        self.entry_motivo = ttk.Entry(form_grid, width=35) # Usamos ttk.Entry
-        self.entry_motivo.grid(row=2, column=3, padx=5, pady=5)
+        # --- FILA 3: ESTADO y MOTIVO ---
+        tk.Label(form_grid, text="Estado:").grid(row=3, column=0, sticky="w", padx=5, pady=5)
+        self.combo_estado = ttk.Combobox(form_grid, state="readonly")
+        self.combo_estado.grid(row=3, column=1, padx=5, pady=5)
+
+        tk.Label(form_grid, text="Motivo:").grid(row=3, column=2, sticky="w", padx=20, pady=5)
+        self.entry_motivo = tk.Entry(form_grid, width=35)
+        self.entry_motivo.grid(row=3, column=3, padx=5, pady=5)
 
         # --- BOTONES (CENTRADOS) ---
         btn_frame = tk.Frame(self)
@@ -196,6 +201,35 @@ class TurnoView(tk.Frame):
         self.combo_estado["values"] = nombres
         if nombres:
             self.combo_estado.current(0)
+
+    def _mostrar_agenda_medico(self, event=None):
+        medico_display = self.combo_medico.get()
+        if not medico_display:
+            self.lbl_agenda.config(text="")
+            return
+
+        id_medico = self.medicos_display_to_id.get(medico_display)
+        if not id_medico:
+            self.lbl_agenda.config(text="")
+            return
+
+        try:
+            agendas = self.controller.obtener_agenda_medico(id_medico)
+            if not agendas:
+                self.lbl_agenda.config(text="Sin agenda configurada.")
+                return
+
+            dias_nombres = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+            texto_agenda = "Agenda:\n"
+            for ag in agendas:
+                dia = dias_nombres[ag.dia_semana]
+                texto_agenda += f"- {dia}: {ag.hora_desde} a {ag.hora_hasta}\n"
+            
+            self.lbl_agenda.config(text=texto_agenda)
+
+        except Exception as e:
+            print(f"Error al cargar agenda: {e}")
+            self.lbl_agenda.config(text="Error al cargar agenda.")
 
     def _cargar_turnos(self):
         turnos = self.controller.listar_turnos()
