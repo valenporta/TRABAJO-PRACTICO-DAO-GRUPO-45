@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-
 from controller.turno_controller import TurnoController
 
 
@@ -26,40 +25,54 @@ class TurnoView(tk.Frame):
         self._limpiar_formulario()
 
     def _crear_widgets(self):
-        form_frame = tk.LabelFrame(self, text="Datos del turno")
-        form_frame.pack(fill="x", padx=10, pady=10)
+        # Usamos ttk.LabelFrame para la estética 'clam'
+        form_frame = ttk.LabelFrame(self, text="📝 Registro de Turnos")
+        form_frame.pack(fill="x", padx=15, pady=15)
 
-        tk.Label(form_frame, text="Paciente:").grid(row=0, column=0, sticky="e", padx=5, pady=5)
-        self.combo_paciente = ttk.Combobox(form_frame, state="readonly", width=40)
+        # Frame interno para controlar el grid
+        form_grid = tk.Frame(form_frame)
+        form_grid.pack(padx=10, pady=5)
+        
+        # --- FILA 0: PACIENTE y MÉDICO ---
+        tk.Label(form_grid, text="Paciente:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        self.combo_paciente = ttk.Combobox(form_grid, state="readonly", width=35) 
         self.combo_paciente.grid(row=0, column=1, padx=5, pady=5)
 
-        tk.Label(form_frame, text="Medico:").grid(row=0, column=2, sticky="e", padx=5, pady=5)
-        self.combo_medico = ttk.Combobox(form_frame, state="readonly", width=40)
+        tk.Label(form_grid, text="Médico:").grid(row=0, column=2, sticky="w", padx=20, pady=5)
+        self.combo_medico = ttk.Combobox(form_grid, state="readonly", width=35)
         self.combo_medico.grid(row=0, column=3, padx=5, pady=5)
 
-        tk.Label(form_frame, text="Fecha (YYYY-MM-DD):").grid(row=1, column=0, sticky="e", padx=5, pady=5)
-        self.entry_fecha = tk.Entry(form_frame)
+        # --- FILA 1: FECHA y HORA ---
+        tk.Label(form_grid, text="Fecha (YYYY-MM-DD):").grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        self.entry_fecha = ttk.Entry(form_grid, width=35) # Usamos ttk.Entry
         self.entry_fecha.grid(row=1, column=1, padx=5, pady=5)
 
-        tk.Label(form_frame, text="Hora (HH:MM):").grid(row=1, column=2, sticky="e", padx=5, pady=5)
-        self.entry_hora = tk.Entry(form_frame)
+        tk.Label(form_grid, text="Hora (HH:MM):").grid(row=1, column=2, sticky="w", padx=20, pady=5)
+        self.entry_hora = ttk.Entry(form_grid, width=35) # Usamos ttk.Entry
         self.entry_hora.grid(row=1, column=3, padx=5, pady=5)
 
-        tk.Label(form_frame, text="Estado:").grid(row=2, column=0, sticky="e", padx=5, pady=5)
-        self.combo_estado = ttk.Combobox(form_frame, state="readonly")
+        # --- FILA 2: ESTADO y MOTIVO ---
+        tk.Label(form_grid, text="Estado:").grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        self.combo_estado = ttk.Combobox(form_grid, state="readonly", width=35)
         self.combo_estado.grid(row=2, column=1, padx=5, pady=5)
 
-        tk.Label(form_frame, text="Motivo:").grid(row=2, column=2, sticky="e", padx=5, pady=5)
-        self.entry_motivo = tk.Entry(form_frame, width=30)
+        tk.Label(form_grid, text="Motivo:").grid(row=2, column=2, sticky="w", padx=20, pady=5)
+        self.entry_motivo = ttk.Entry(form_grid, width=35) # Usamos ttk.Entry
         self.entry_motivo.grid(row=2, column=3, padx=5, pady=5)
 
+        # --- BOTONES (CENTRADOS) ---
         btn_frame = tk.Frame(self)
-        btn_frame.pack(fill="x", padx=10, pady=10)
+        btn_frame.pack(fill="x", padx=15, pady=10)
+        
+        # Contenedor interno para centrar los botones
+        center_frame = tk.Frame(btn_frame)
+        center_frame.pack(anchor="center") 
 
-        tk.Button(btn_frame, text="Guardar", width=12, command=self._guardar_turno).pack(side="left", padx=5)
-        tk.Button(btn_frame, text="Actualizar", width=12, command=self._actualizar_turno).pack(side="left", padx=5)
-        tk.Button(btn_frame, text="Eliminar", width=12, command=self._eliminar_turno).pack(side="left", padx=5)
-        tk.Button(btn_frame, text="Limpiar", width=12, command=self._limpiar_formulario).pack(side="left", padx=5)
+        # Usamos ttk.Button con el estilo 'TButton'
+        ttk.Button(center_frame, text="Guardar", command=self._guardar_turno, style='TButton').pack(side="left", padx=5)
+        ttk.Button(center_frame, text="Actualizar", command=self._actualizar_turno, style='TButton').pack(side="left", padx=5)
+        ttk.Button(center_frame, text="Eliminar", command=self._eliminar_turno, style='TButton').pack(side="left", padx=5)
+        ttk.Button(center_frame, text="Limpiar", command=self._limpiar_formulario, style='TButton').pack(side="left", padx=5)
 
         # --- FILTRO ---
         filtro_frame = tk.LabelFrame(self, text="Filtrar Turnos")
@@ -76,29 +89,41 @@ class TurnoView(tk.Frame):
         tk.Button(filtro_frame, text="Filtrar", command=self._filtrar_turnos).pack(side="left", padx=5)
         tk.Button(filtro_frame, text="Ver Todos", command=self._ver_todos).pack(side="left", padx=5)
 
+        # --- TABLA ---
         tabla_frame = tk.Frame(self)
-        tabla_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        tabla_frame.pack(fill="both", expand=True, padx=15, pady=10) # Mayor padding
 
         columnas = ("id", "paciente", "medico", "fecha", "hora", "estado", "motivo")
         self.tabla = ttk.Treeview(tabla_frame, columns=columnas, show="headings", height=12)
 
+        # Configuración de Encabezados (Manteniendo la ordenación)
         self.tabla.heading("id", text="ID", command=lambda: self.ordenar_columna("id", False))
         self.tabla.heading("paciente", text="Paciente", command=lambda: self.ordenar_columna("paciente", False))
-        self.tabla.heading("medico", text="Medico", command=lambda: self.ordenar_columna("medico", False))
+        self.tabla.heading("medico", text="Médico", command=lambda: self.ordenar_columna("medico", False))
         self.tabla.heading("fecha", text="Fecha", command=lambda: self.ordenar_columna("fecha", False))
         self.tabla.heading("hora", text="Hora", command=lambda: self.ordenar_columna("hora", False))
         self.tabla.heading("estado", text="Estado", command=lambda: self.ordenar_columna("estado", False))
         self.tabla.heading("motivo", text="Motivo", command=lambda: self.ordenar_columna("motivo", False))
 
-        for col in columnas:
-            self.tabla.column(col, width=120, anchor="center")
-
+        # Configuración de Columnas
+        self.tabla.column("id", width=50, anchor="center")
+        self.tabla.column("paciente", width=200, anchor="w")
+        self.tabla.column("medico", width=200, anchor="w")
+        self.tabla.column("fecha", width=100, anchor="center")
+        self.tabla.column("hora", width=80, anchor="center")
+        self.tabla.column("estado", width=100, anchor="center")
         self.tabla.column("motivo", width=200, anchor="w")
+        
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(tabla_frame, orient="vertical", command=self.tabla.yview)
+        self.tabla.configure(yscrollcommand=scrollbar.set)
+        
+        scrollbar.pack(side="right", fill="y")
         self.tabla.pack(fill="both", expand=True)
         self.tabla.bind("<<TreeviewSelect>>", self._seleccionar_turno)
 
     # -------------------------------------------
-    # Ordenar columnas
+    # Ordenar columnas (Mantenido)
     # -------------------------------------------
     def ordenar_columna(self, col, reverse):
         # Obtener datos de la tabla
@@ -116,6 +141,7 @@ class TurnoView(tk.Frame):
 
         # Actualizar comando para invertir orden en el proximo click
         self.tabla.heading(col, command=lambda: self.ordenar_columna(col, not reverse))
+
 
     def _cargar_pacientes(self):
         try:
@@ -174,26 +200,8 @@ class TurnoView(tk.Frame):
             self.combo_estado.current(0)
 
     def _cargar_turnos(self):
-        for fila in self.tabla.get_children():
-            self.tabla.delete(fila)
-        self.turnos_cache.clear()
-
         turnos = self.controller.listar_turnos()
-        for turno in turnos:
-            self.turnos_cache[turno.id_turno] = turno
-            self.tabla.insert(
-                "",
-                "end",
-                values=(
-                    turno.id_turno,
-                    f"{turno.paciente_nombre} (ID {turno.id_paciente})",
-                    f"{turno.medico_nombre} (ID {turno.id_medico})",
-                    turno.fecha,
-                    turno.hora,
-                    turno.estado_nombre,
-                    turno.motivo or "",
-                ),
-            )
+        self._actualizar_tabla(turnos)
 
     def _seleccionar_turno(self, _event):
         seleccionado = self.tabla.focus()
@@ -252,7 +260,7 @@ class TurnoView(tk.Frame):
 
     def _actualizar_turno(self):
         try:
-            if not hasattr(self, "selected_id") or self.selected_id is None:
+            if self.selected_id is None:
                 raise ValueError("Seleccione un turno de la tabla.")
 
             datos = self._obtener_datos_formulario()
@@ -264,10 +272,10 @@ class TurnoView(tk.Frame):
 
     def _eliminar_turno(self):
         try:
-            if not hasattr(self, "selected_id") or self.selected_id is None:
+            if self.selected_id is None:
                 raise ValueError("Seleccione un turno de la tabla.")
 
-            if messagebox.askyesno("Confirmar", "Eliminar este turno?"):
+            if messagebox.askyesno("Confirmar", "¿Eliminar este turno?"):
                 self.controller.eliminar_turno(self.selected_id)
                 messagebox.showinfo("Exito", "Turno eliminado.")
                 self._cargar_turnos()
@@ -322,12 +330,12 @@ class TurnoView(tk.Frame):
     def _filtrar_turnos(self):
         desde = self.entry_filtro_desde.get()
         hasta = self.entry_filtro_hasta.get()
-        
+
         try:
             turnos = self.controller.filtrar_turnos(desde, hasta)
             self._actualizar_tabla(turnos)
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
+        except Exception as exc:
+            messagebox.showerror("Error", str(exc))
 
     def _ver_todos(self):
         self.entry_filtro_desde.delete(0, tk.END)

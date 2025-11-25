@@ -5,7 +5,6 @@ import os
 
 # Inicialización de Base de Datos
 from services.database import DatabaseConnection
-from services.data_seeder import DataSeeder
 
 # Vistas existentes
 from view.paciente_view import PacienteView
@@ -158,9 +157,14 @@ class MenuPrincipal(tk.Frame):
         ReporteEstadisticoView(self)
 
     def cargar_header(self, path, width):
-        """Carga y muestra la imagen de encabezado."""
+        
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        ruta_completa = os.path.join(base_dir, path)
+        
         try:
-            img = Image.open(path)
+            img = Image.open(ruta_completa) 
+            
             ratio = width / img.width
             height = int(img.height * ratio)
             img = img.resize((width, height), Image.LANCZOS)
@@ -169,9 +173,12 @@ class MenuPrincipal(tk.Frame):
             tk.Label(self.header_frame, image=self.header_img, bg="#FFFFFF").pack(anchor="center", padx=10, pady=5)
             
         except FileNotFoundError:
+            # Informa la ruta que falló para depuración
+            print(f"Error: No se encontró el archivo de imagen en la ruta: {ruta_completa}") 
             tk.Label(self.header_frame, text="Sistema de Turnos Médicos",
                      font=("Arial", 18, "bold"), bg="#FFFFFF").pack(pady=20)
         except Exception as e:
+            print(f"Error al cargar la imagen: {e}")
             tk.Label(self.header_frame, text="Sistema de Turnos Médicos",
                      font=("Arial", 18, "bold"), bg="#FFFFFF").pack(pady=20)
 
@@ -184,9 +191,6 @@ if __name__ == "__main__":
     # Crear DB si no existe
     db = DatabaseConnection()
     db.initialize_database()
-
-    seeder = DataSeeder()
-    seeder.run()
 
     root = tk.Tk()
 
