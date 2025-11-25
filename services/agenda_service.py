@@ -76,3 +76,25 @@ class AgendaService:
                 duracion_turno_min=row[5]
             )
         return None
+    
+    def actualizar(self, agenda: Agenda):
+        self.cur.execute("""
+            UPDATE agenda
+            SET dia_semana = ?, hora_desde = ?, hora_hasta = ?, duracion_turno_min = ?
+            WHERE id_agenda = ?
+        """, (agenda.dia_semana, agenda.hora_desde, agenda.hora_hasta, agenda.duracion_turno_min, agenda.id_agenda))
+        self.con.commit()
+        return agenda
+
+    def verificar_solapamiento_actualizacion(self, id_agenda, id_medico, dia_semana, hora_desde, hora_hasta):
+        self.cur.execute("""
+            SELECT id_agenda 
+            FROM agenda
+            WHERE id_medico = ? 
+            AND dia_semana = ?
+            AND id_agenda != ?
+            AND (hora_desde < ? AND hora_hasta > ?)
+        """, (id_medico, dia_semana, id_agenda, hora_hasta, hora_desde))
+        
+        row = self.cur.fetchone()
+        return row is not None

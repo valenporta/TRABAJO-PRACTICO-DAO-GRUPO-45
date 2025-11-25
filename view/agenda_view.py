@@ -91,6 +91,7 @@ class AgendaView(tk.Frame):
         ttk.Button(center_frame, text="🔍 Buscar Agendas del Médico", command=self.cargar, style='TButton').pack(side="left", padx=5)
         tk.Frame(center_frame, width=20).pack(side="left") # Espacio separador
         ttk.Button(center_frame, text="Guardar", command=self.guardar, style='TButton').pack(side="left", padx=5)
+        ttk.Button(center_frame, text="Actualizar", command=self.actualizar, style='TButton').pack(side="left", padx=5)
         ttk.Button(center_frame, text="Eliminar", command=self.eliminar, style='TButton').pack(side="left", padx=5)
         ttk.Button(center_frame, text="Limpiar Campos", command=self.limpiar, style='TButton').pack(side="left", padx=5)
 
@@ -305,3 +306,28 @@ class AgendaView(tk.Frame):
                 self.lista_medicos.selection_set(idx)
                 self.lista_medicos.see(idx)
                 break
+
+    def actualizar(self):
+        if not self.selected_id_agenda:
+            messagebox.showwarning("Aviso", "Seleccione una agenda de la lista para actualizar.")
+            return
+
+        try:
+            idx_dia = self.combo_dia.current()
+            if idx_dia < 0: idx_dia = 0
+
+            datos = {
+                "id_medico": self.selected_medico_id,
+                "dia_semana": idx_dia,
+                "hora_desde": self.entry_hora_desde.get(),
+                "duracion_horas": self.entry_duracion_horas.get(),
+                "duracion_turno_min": self.entry_duracion.get()
+            }
+
+            self.controller.actualizar_agenda(self.selected_id_agenda, datos)
+            messagebox.showinfo("OK", "Agenda actualizada exitosamente.")
+            self.cargar()
+            self.limpiar()
+
+        except Exception as e:
+            messagebox.showerror("Error", str(e))

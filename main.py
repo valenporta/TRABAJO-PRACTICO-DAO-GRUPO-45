@@ -71,13 +71,13 @@ class MenuPrincipal(tk.Frame):
         ttk.Separator(self.menu_frame, orient='horizontal').pack(fill='x', padx=20, pady=10)
 
         # --- Botones del menú ---
-        ttk.Button(self.menu_frame, text="ABM Pacientes",
+        ttk.Button(self.menu_frame, text="Gestion de Pacientes",
                   command=self.abrir_pacientes, width=25).pack(fill="x", pady=5)
 
-        ttk.Button(self.menu_frame, text="ABM Médicos",
+        ttk.Button(self.menu_frame, text="Gestion de Médicos",
                   command=self.abrir_medicos, width=25).pack(fill="x", pady=5)
 
-        ttk.Button(self.menu_frame, text="ABM Especialidades",
+        ttk.Button(self.menu_frame, text="Gestion de Especialidades",
                   command=self.abrir_especialidades, width=25).pack(fill="x", pady=5)
 
         ttk.Button(self.menu_frame, text="Gestión de Agenda",
