@@ -61,6 +61,21 @@ class TurnoView(tk.Frame):
         tk.Button(btn_frame, text="Eliminar", width=12, command=self._eliminar_turno).pack(side="left", padx=5)
         tk.Button(btn_frame, text="Limpiar", width=12, command=self._limpiar_formulario).pack(side="left", padx=5)
 
+        # --- FILTRO ---
+        filtro_frame = tk.LabelFrame(self, text="Filtrar Turnos")
+        filtro_frame.pack(fill="x", padx=10, pady=5)
+
+        tk.Label(filtro_frame, text="Desde (YYYY-MM-DD):").pack(side="left", padx=5)
+        self.entry_filtro_desde = tk.Entry(filtro_frame, width=15)
+        self.entry_filtro_desde.pack(side="left", padx=5)
+
+        tk.Label(filtro_frame, text="Hasta (YYYY-MM-DD):").pack(side="left", padx=5)
+        self.entry_filtro_hasta = tk.Entry(filtro_frame, width=15)
+        self.entry_filtro_hasta.pack(side="left", padx=5)
+
+        tk.Button(filtro_frame, text="Filtrar", command=self._filtrar_turnos).pack(side="left", padx=5)
+        tk.Button(filtro_frame, text="Ver Todos", command=self._ver_todos).pack(side="left", padx=5)
+
         tabla_frame = tk.Frame(self)
         tabla_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -303,3 +318,39 @@ class TurnoView(tk.Frame):
             "motivo": self.entry_motivo.get(),
             "id_estado": id_estado,
         }
+
+    def _filtrar_turnos(self):
+        desde = self.entry_filtro_desde.get()
+        hasta = self.entry_filtro_hasta.get()
+        
+        try:
+            turnos = self.controller.filtrar_turnos(desde, hasta)
+            self._actualizar_tabla(turnos)
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+    def _ver_todos(self):
+        self.entry_filtro_desde.delete(0, tk.END)
+        self.entry_filtro_hasta.delete(0, tk.END)
+        self._cargar_turnos()
+
+    def _actualizar_tabla(self, turnos):
+        for fila in self.tabla.get_children():
+            self.tabla.delete(fila)
+        self.turnos_cache.clear()
+
+        for turno in turnos:
+            self.turnos_cache[turno.id_turno] = turno
+            self.tabla.insert(
+                "",
+                "end",
+                values=(
+                    turno.id_turno,
+                    f"{turno.paciente_nombre} (ID {turno.id_paciente})",
+                    f"{turno.medico_nombre} (ID {turno.id_medico})",
+                    turno.fecha,
+                    turno.hora,
+                    turno.estado_nombre,
+                    turno.motivo or "",
+                ),
+            )

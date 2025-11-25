@@ -139,3 +139,18 @@ class TurnoController:
             raise ValueError(f"El ID de {nombre_campo} debe ser positivo.")
 
         return numero
+
+    def filtrar_turnos(self, fecha_inicio, fecha_fin):
+        if not fecha_inicio or not fecha_fin:
+            raise ValueError("Debe ingresar ambas fechas.")
+
+        try:
+            inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
+            fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d")
+        except ValueError:
+            raise ValueError("Las fechas deben tener formato YYYY-MM-DD.")
+
+        if inicio_dt > fin_dt:
+            raise ValueError("La fecha de inicio no puede ser mayor a la fecha de fin.")
+
+        return self.turno_service.obtener_turnos_por_rango(fecha_inicio, fecha_fin)

@@ -328,3 +328,50 @@ class TurnoService:
             turnos[-1].email_paciente = row[4]
         return turnos
 
+    def obtener_turnos_por_rango(self, fecha_inicio, fecha_fin):
+        self.cur.execute(
+            """
+            SELECT
+                t.id_turno,
+                t.id_paciente,
+                p.nombre,
+                p.apellido,
+                p.email,
+                t.id_medico,
+                m.nombre,
+                m.apellido,
+                t.fecha,
+                t.hora,
+                t.id_estado,
+                e.nombre,
+                t.motivo
+            FROM turno t
+            JOIN paciente p ON p.id_paciente = t.id_paciente
+            JOIN medico m ON m.id_medico = t.id_medico
+            JOIN estado_turno e ON e.id_estado = t.id_estado
+            WHERE t.fecha BETWEEN ? AND ?
+            ORDER BY t.fecha, t.hora
+            """,
+            (fecha_inicio, fecha_fin),
+        )
+        rows = self.cur.fetchall()
+
+        turnos = []
+        for row in rows:
+            turnos.append(
+                Turno(
+                    id_paciente=row[1],
+                    id_medico=row[5],
+                    fecha=row[8],
+                    hora=row[9],
+                    id_estado=row[10],
+                    motivo=row[12],
+                    id_turno=row[0],
+                    paciente_nombre=f"{row[3]}, {row[2]}",
+                    medico_nombre=f"{row[7]}, {row[6]}",
+                    estado_nombre=row[11],
+                )
+            )
+            # Agregamos email dinamicamente
+            turnos[-1].email_paciente = row[4]
+        return turnos
