@@ -41,14 +41,34 @@ class EspecialidadView(tk.Frame):
         cols = ("id", "nombre")
         self.tabla = ttk.Treeview(table_frame, columns=cols, show="headings")
 
-        self.tabla.heading("id", text="ID")
-        self.tabla.heading("nombre", text="Nombre")
+        self.tabla.heading("id", text="ID", command=lambda: self.ordenar_columna("id", False))
+        self.tabla.heading("nombre", text="Nombre", command=lambda: self.ordenar_columna("nombre", False))
 
         self.tabla.column("id", width=60)
         self.tabla.column("nombre", width=200)
 
         self.tabla.pack(fill="both", expand=True)
         self.tabla.bind("<<TreeviewSelect>>", self.seleccionar)
+
+    # -------------------------------------------
+    # Ordenar columnas
+    # -------------------------------------------
+    def ordenar_columna(self, col, reverse):
+        # Obtener datos de la tabla
+        l = [(self.tabla.set(k, col), k) for k in self.tabla.get_children('')]
+        
+        # Intentar convertir a numero si es posible (para ID)
+        try:
+            l.sort(key=lambda t: int(t[0]), reverse=reverse)
+        except ValueError:
+            l.sort(key=lambda t: t[0].lower(), reverse=reverse)
+
+        # Reordenar items
+        for index, (val, k) in enumerate(l):
+            self.tabla.move(k, '', index)
+
+        # Actualizar comando para invertir orden en el proximo click
+        self.tabla.heading(col, command=lambda: self.ordenar_columna(col, not reverse))
 
     # -----------------------------
     # Funciones CRUD

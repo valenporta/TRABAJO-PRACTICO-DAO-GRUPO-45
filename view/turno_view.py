@@ -67,13 +67,13 @@ class TurnoView(tk.Frame):
         columnas = ("id", "paciente", "medico", "fecha", "hora", "estado", "motivo")
         self.tabla = ttk.Treeview(tabla_frame, columns=columnas, show="headings", height=12)
 
-        self.tabla.heading("id", text="ID")
-        self.tabla.heading("paciente", text="Paciente")
-        self.tabla.heading("medico", text="Medico")
-        self.tabla.heading("fecha", text="Fecha")
-        self.tabla.heading("hora", text="Hora")
-        self.tabla.heading("estado", text="Estado")
-        self.tabla.heading("motivo", text="Motivo")
+        self.tabla.heading("id", text="ID", command=lambda: self.ordenar_columna("id", False))
+        self.tabla.heading("paciente", text="Paciente", command=lambda: self.ordenar_columna("paciente", False))
+        self.tabla.heading("medico", text="Medico", command=lambda: self.ordenar_columna("medico", False))
+        self.tabla.heading("fecha", text="Fecha", command=lambda: self.ordenar_columna("fecha", False))
+        self.tabla.heading("hora", text="Hora", command=lambda: self.ordenar_columna("hora", False))
+        self.tabla.heading("estado", text="Estado", command=lambda: self.ordenar_columna("estado", False))
+        self.tabla.heading("motivo", text="Motivo", command=lambda: self.ordenar_columna("motivo", False))
 
         for col in columnas:
             self.tabla.column(col, width=120, anchor="center")
@@ -81,6 +81,26 @@ class TurnoView(tk.Frame):
         self.tabla.column("motivo", width=200, anchor="w")
         self.tabla.pack(fill="both", expand=True)
         self.tabla.bind("<<TreeviewSelect>>", self._seleccionar_turno)
+
+    # -------------------------------------------
+    # Ordenar columnas
+    # -------------------------------------------
+    def ordenar_columna(self, col, reverse):
+        # Obtener datos de la tabla
+        l = [(self.tabla.set(k, col), k) for k in self.tabla.get_children('')]
+        
+        # Intentar convertir a numero si es posible (para ID)
+        try:
+            l.sort(key=lambda t: int(t[0]), reverse=reverse)
+        except ValueError:
+            l.sort(key=lambda t: t[0].lower(), reverse=reverse)
+
+        # Reordenar items
+        for index, (val, k) in enumerate(l):
+            self.tabla.move(k, '', index)
+
+        # Actualizar comando para invertir orden en el proximo click
+        self.tabla.heading(col, command=lambda: self.ordenar_columna(col, not reverse))
 
     def _cargar_pacientes(self):
         try:

@@ -70,12 +70,33 @@ class MedicoView(tk.Frame):
         cols = ("id", "dni", "nombre", "apellido", "matricula", "telefono", "especialidades")
         self.tabla = ttk.Treeview(table_frame, columns=cols, show="headings")
 
+        # Configurar cabeceras para ordenamiento
         for c in cols:
-            self.tabla.heading(c, text=c.capitalize())
+            self.tabla.heading(c, text=c.capitalize(), command=lambda col=c: self.ordenar_columna(col, False))
             self.tabla.column(c, width=120)
 
         self.tabla.pack(fill="both", expand=True)
         self.tabla.bind("<<TreeviewSelect>>", self.seleccionar)
+
+    # -------------------------------------------
+    # Ordenar columnas
+    # -------------------------------------------
+    def ordenar_columna(self, col, reverse):
+        # Obtener datos de la tabla
+        l = [(self.tabla.set(k, col), k) for k in self.tabla.get_children('')]
+        
+        # Intentar convertir a numero si es posible (para ID y DNI)
+        try:
+            l.sort(key=lambda t: int(t[0]), reverse=reverse)
+        except ValueError:
+            l.sort(key=lambda t: t[0].lower(), reverse=reverse)
+
+        # Reordenar items
+        for index, (val, k) in enumerate(l):
+            self.tabla.move(k, '', index)
+
+        # Actualizar comando para invertir orden en el proximo click
+        self.tabla.heading(col, command=lambda: self.ordenar_columna(col, not reverse))
 
     # ------------------------------
     # CRUD
