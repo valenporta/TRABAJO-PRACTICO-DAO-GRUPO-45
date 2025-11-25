@@ -13,6 +13,7 @@ from view.especialidad_view import EspecialidadView
 from view.agenda_view import AgendaView
 from view.turno_view import TurnoView
 from view.historia_clinica_view import HistoriaClinicaView
+from view.registrar_atencion_view import RegistrarAtencionView
 
 from view.reporte_medico_view import ReporteMedicoView
 from view.reporte_pacientes_view import ReportePacientesView
@@ -39,8 +40,32 @@ class MenuPrincipal(tk.Frame):
         self.header_frame.pack(fill="x", pady=(0, 10))
         self.cargar_header("img/Sist.png", width=320)
         
-        self.menu_frame = tk.Frame(self, bg="#F0F0F0")
-        self.menu_frame.pack(fill="x", pady=10, padx=20)
+        # --- IMPLEMENTACIÓN DEL SCROLLBAR PARA EL MENÚ ---
+        self.canvas = tk.Canvas(self, bg="#F0F0F0", highlightthickness=0)
+        self.scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.menu_frame = tk.Frame(self.canvas, bg="#F0F0F0")
+
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        
+        # Asegura que el scrollregion se ajuste al tamaño del frame contenido
+        self.menu_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(
+                scrollregion = self.canvas.bbox("all")
+            )
+        )
+        
+        # Centrar el frame del menú en el canvas
+        self.canvas.create_window((200, 0), window=self.menu_frame, anchor="n") # 200 es aprox la mitad de 400 (ancho ventana)
+        
+        # Ajustar ancho del canvas al redimensionar
+        self.bind("<Configure>", self._on_resize)
+
+        self.scrollbar.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        
+        # Bind mouse wheel for scrolling
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
 
         # Separador visual
         ttk.Separator(self.menu_frame, orient='horizontal').pack(fill='x', padx=20, pady=10)
@@ -61,12 +86,25 @@ class MenuPrincipal(tk.Frame):
         ttk.Button(self.menu_frame, text="Registro de Turnos",
               command=self.abrir_turnos, width=25).pack(fill="x", pady=5)
 
+        ttk.Button(self.menu_frame, text="Registrar Atención",
+                command=self.abrir_registrar_atencion, width=25).pack(fill="x", pady=5)
+
         ttk.Button(self.menu_frame, text="Historia Clinica",
                 command=self.abrir_historia, width=25).pack(fill="x", pady=5)
 
         ttk.Button(self.menu_frame, text="Reportes",
                 command=self.abrir_menu_reportes, width=25).pack(fill="x", pady=5)
 
+
+    def _on_mousewheel(self, event):
+        self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+
+    def _on_resize(self, event):
+        # Actualizar la posición del window en el canvas para mantenerlo centrado
+        width = event.width
+        # Solo actualizamos si el canvas tiene items
+        if self.canvas.find_all():
+             self.canvas.coords(self.canvas.find_all()[0], width // 2, 0)
 
     # -----------------------------------------
     # Logica del Menú de Reportes
@@ -135,6 +173,12 @@ class MenuPrincipal(tk.Frame):
         ventana.geometry("900x600")
         TurnoView(ventana)
 
+    def abrir_registrar_atencion(self):
+        ventana = tk.Toplevel(self)
+        ventana.title("Registrar Atención")
+        ventana.geometry("1000x700")
+        RegistrarAtencionView(ventana)
+
     def abrir_historia(self):
         ventana = tk.Toplevel(self)
         ventana.title("Historia Clinica")
@@ -194,7 +238,7 @@ if __name__ == "__main__":
 
     root = tk.Tk()
 
-    root.geometry("400x750")
+    root.geometry("400x600")
     root.title("Sistema de Turnos Médicos")
     root.resizable(False, False)
 

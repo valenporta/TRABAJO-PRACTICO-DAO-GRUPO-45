@@ -178,10 +178,8 @@ class TurnoView(tk.Frame):
         self.medicos_id_to_display = {}
         valores = []
         for medico in medicos:
-            matricula = medico.matricula or "Sin matricula"
             display = (
-                f"{medico.apellido}, {medico.nombre} - Mat {matricula} "
-                f"(ID {medico.id_medico})"
+                f"{medico.apellido}, {medico.nombre} - {medico.especialidades or 'Sin especialidad'}"
             )
             self.medicos_display_to_id[display] = medico.id_medico
             self.medicos_id_to_display[medico.id_medico] = display

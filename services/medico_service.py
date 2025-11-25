@@ -27,9 +27,12 @@ class MedicoService:
     # Obtener todos
     def obtener_todos(self):
         self.cur.execute("""
-            SELECT id_medico, dni, nombre, apellido, matricula, telefono
-            FROM medico
-            ORDER BY apellido, nombre
+            SELECT m.id_medico, m.dni, m.nombre, m.apellido, m.matricula, m.telefono, GROUP_CONCAT(e.nombre, ', ') as especialidades
+            FROM medico m
+            LEFT JOIN medico_especialidad me ON m.id_medico = me.id_medico
+            LEFT JOIN especialidad e ON me.id_especialidad = e.id_especialidad
+            GROUP BY m.id_medico
+            ORDER BY m.apellido, m.nombre
         """)
         rows = self.cur.fetchall()
 
@@ -41,7 +44,8 @@ class MedicoService:
                 apellido=r[3],
                 matricula=r[4],
                 telefono=r[5],
-                id_medico=r[0]
+                id_medico=r[0],
+                especialidades=r[6]
             ))
         return medicos
 
